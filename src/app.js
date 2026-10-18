@@ -1,0 +1,369 @@
+import * as api from "./backend.js";
+import {STAGES,INDUSTRIES,GOALS,ADVISOR_MODES,getRoadmap,getReadiness,getSuggestedQuestion} from "./journeys.js";
+import {esc as h,model,money,planMarkdown,freshBusiness,slug,download} from "./logic.js";
+
+const state={user:null,authMode:"login",businesses:[],businessId:null,notes:[],artifacts:[],messages:[],page:"home",demo:false,menu:false,mode:"assessment",working:false,ready:false};
+const $=s=>document.querySelector(s);
+const active=()=>state.businesses.find(b=>b.id===state.businessId);
+const icon=(name)=>({arrow:"→",check:"✓",sparkle:"✳",menu:"☰",cross:"×",download:"↓",back:"←",more:"···"}[name]||"↗");
+const options=(arr,value)=>arr.map(i=>'<option value="'+h(i.id)+'" '+(i.id===value?'selected':'')+'>'+h(i.name)+'</option>').join("");
+const fmtDate=s=>s?new Date(s).toLocaleDateString("en-BS",{year:"numeric",month:"short",day:"numeric"}):"";
+function toast(text){const el=$("#toast");el.textContent=text;el.classList.add("show");clearTimeout(toast.timeout);toast.timeout=setTimeout(()=>el.classList.remove("show"),3800)}
+function go(page){state.page=page;state.menu=false;location.hash="#/"+page;render();scrollTo({top:0,behavior:"instant"});}
+function label(text){return '<span class="eyebrow">'+h(text)+'</span>'}
+function btn(text,action,cls=""){return '<button type="button" class="button '+cls+'" data-action="'+h(action)+'">'+h(text)+'</button>'}
+function empty(title,desc){return '<div class="empty"><div class="empty-mark">◇</div><h3>'+h(title)+'</h3><p>'+h(desc)+'</p></div>'}
+function header(title,desc,tag){return '<div class="page-head">'+label(tag||"YOUR WORKSPACE")+'<h1>'+h(title)+'</h1><p>'+h(desc)+'</p></div>'}
+function box(title,body,cls=""){return '<section class="panel '+cls+'"><h2>'+h(title)+'</h2>'+body+'</section>'}
+function field(name,title,value="",type="text",hint=""){
+ let v=h(value??"");let widget=type==="textarea"?'<textarea id="'+name+'" name="'+name+'" rows="4">'+v+'</textarea>':'<input id="'+name+'" name="'+name+'" type="'+type+'" value="'+v+'" '+(type==="number"?'min="0" step="any"':'')+'>';
+ return '<label class="field" for="'+name+'"><span>'+h(title)+'</span>'+widget+(hint?'<small>'+h(hint)+'</small>':'')+'</label>';
+}
+function pick(name,title,list,value){return '<label class="field" for="'+name+'"><span>'+h(title)+'</span><select id="'+name+'" name="'+name+'">'+options(list,value)+'</select></label>'}
+function topbar(){
+ return '<header class="topbar"><button type="button" class="mobile-toggle" aria-label="Toggle navigation" data-action="menu">☰</button><a class="wordmark" href="#/home"><span class="mark">B<span>.</span></span><span>bizz<span class="lime">intel.</span></span></a>'+
+ '<div class="topbar-right"><span class="context-label">'+(state.demo?'DEMO SESSION':state.user?h(state.user.email):'BUSINESS INTELLIGENCE')+'</span>'+
+ (state.user?btn("Sign out","signout","button-ghost button-small"):'')+'</div></header>';
+}
+function navigation(){
+ const items=[["home","Overview","◫"],["business","Business profile","◎"],["journey","Your roadmap","◇"],["advisor","AI advisor","✳"],["evidence","Evidence vault","▤"],["documents","Documents","▣"],["financials","Financials","◈"],["toolkit","Launch toolkit","▦"],["settings","Settings","⚙"]];
+ return '<aside class="sidebar '+(state.menu?'open':'')+'"><div class="sidebar-title">WORKSPACE</div>'+
+ '<div class="business-picker"><label for="business-switch">SELECT A BUSINESS</label><select id="business-switch">'+state.businesses.map(b=>'<option value="'+h(b.id)+'" '+(b.id===state.businessId?'selected':'')+'>'+h(b.name)+'</option>').join("")+'</select>'+
+ '<button class="subtle-add" data-action="create" type="button">＋ Add a business</button></div>'+
+ '<nav aria-label="Workspace navigation">'+items.map(i=>'<button class="nav-item '+(state.page===i[0]?'current':'')+'" data-go="'+i[0]+'"><span class="nav-glyph">'+i[2]+'</span>'+i[1]+'</button>').join("")+'</nav>'+
+ '<div class="sidebar-footer"><div class="small-card"><strong>Built for the real journey.</strong><p>Better decisions, grounded in evidence.</p></div><p>BAHAMAS AI SOLUTIONS</p></div></aside>';
+}
+function outer(body){
+ return topbar()+'<div class="shell">'+navigation()+'<main class="content" id="main">'+
+ (state.demo?'<div class="demo-banner"><strong>Preview mode.</strong> Work is not saved or shared across devices. Connect the backend for real accounts and AI. '+btn("Exit demo","exitdemo","button-small")+'</div>':'')+
+ body+'</main></div>';
+}
+function welcome(){
+ return topbar()+'<main class="welcome"><div class="welcome-content">'+label("THE BUSINESS-BUILDING WORKSPACE")+
+ '<h1>Every business starts somewhere. <em>Make the next move count.</em></h1>'+
+ '<p class="lead">From a first idea to a growing operation, BizzIntel gives you one place to plan, challenge assumptions, organize the work and get evidence-based AI guidance.</p>'+
+ '<div class="welcome-actions">'+btn("Explore the demo","demo")+(api.configured?btn("Create your account","show-signup","button-outline"):btn("See what is coming","show-info","button-outline"))+'</div>'+
+ '<div class="stat-strip"><div><strong>06</strong><span>Business stages</span></div><div><strong>07</strong><span>Industry journeys</span></div><div><strong>01</strong><span>Clear next move</span></div></div></div>'+
+ '<div class="auth-card"><div class="card-overline">FOUNDER ACCESS</div>'+
+ (api.configured?'<h2>'+(state.authMode==="signup"?"Create an account":state.authMode==="reset"?"Reset your password":"Welcome back")+'</h2>'+
+ '<p>'+(state.authMode==="signup"?"Set up a secure business workspace.":state.authMode==="reset"?"We will email a recovery link.":"Sign in to continue where you left off.")+'</p>'+
+ '<form id="auth-form" class="stack"><label class="field"><span>Email</span><input required name="email" type="email" autocomplete="email"></label>'+
+ (state.authMode!=="reset"?'<label class="field"><span>Password</span><input required minlength="8" name="password" type="password" autocomplete="'+(state.authMode==="signup"?"new-password":"current-password")+'"></label>':'')+
+ '<button class="button button-wide" type="submit">'+(state.authMode==="signup"?"Create account":state.authMode==="reset"?"Send recovery email":"Sign in")+' →</button></form>'+
+ '<div class="auth-links"><button data-action="show-login">Sign in</button><button data-action="show-signup">Create account</button><button data-action="show-reset">Forgot password?</button></div>':
+ '<h2>Cloud access is not configured yet.</h2><p>The preview is functional without an account. Secure cloud storage and live AI require a dedicated Supabase project.</p><div class="divider"></div>'+
+ '<div class="info-list"><span>✓ Stage-specific journeys</span><span>✓ Multi-business workspace</span><span>✓ Real AI endpoint prepared</span></div>'+
+ '<button data-action="demo" class="button button-wide">Explore the demo →</button>')+
+ '</div></main>';
+}
+function demoSetup(){
+ state.demo=true;state.user=null;
+ const id=crypto.randomUUID();
+ const b={...freshBusiness("demo",{name:"Island Example Co.",stage:"operating",industry:"service",location:"Nassau, The Bahamas",goal:"customers"}),id,
+   summary:"An illustrative mobile service business.",customer:"Customers in Nassau seeking reliable on-location service.",problem:"Convenient service can be difficult to book.",solution:"A clear, bookable service with reliable arrival windows.",evidence:"",updated_at:new Date().toISOString()};
+ state.businesses=[b];state.businessId=id;state.notes=[];state.artifacts=[];state.messages=[];go("home");
+}
+function stepTag(value){return (STAGES.find(s=>s.id===value)||STAGES[0]).short}
+function stat(label,value,description){return '<div class="kpi"><span>'+h(label)+'</span><strong>'+h(value)+'</strong><small>'+h(description)+'</small></div>'}
+function overview(b){
+ const tasks=getRoadmap(b),done=tasks.filter(t=>Boolean(b.tasks?.[t.id])).length,readiness=getReadiness(b);
+ const next=tasks.filter(t=>!b.tasks?.[t.id]).slice(0,3);
+ return header('The next move starts here.','One place to understand the business, make progress and keep decisions grounded.','YOUR COMMAND CENTER')+
+ '<div class="hero-panel"><div>'+label("CURRENT BUSINESS")+'<h2>'+h(b.name)+'</h2><p>'+h(b.summary||"Build the basics. Test the assumptions. Then move.")+'</p><div class="hero-tags"><span>'+h(stepTag(b.stage))+'</span><span>'+h(INDUSTRIES.find(i=>i.id===b.industry)?.name||"Other")+'</span><span>'+h(b.location)+'</span></div></div>'+
+ '<div class="hero-cta">'+btn("Open business advisor","nav-advisor")+'</div></div>'+
+ '<div class="kpi-grid">'+stat("Roadmap",done+" / "+tasks.length,"Tasks completed")+stat("Business context",readiness.completed+" / 4","Foundational inputs recorded")+stat("Current focus",GOALS.find(g=>g.id===b.goal)?.name||"Validation","User-selected priority")+'</div>'+
+ '<div class="two-col">'+box("Your next three moves",'<p class="section-note">A starting point based on your stage, industry and goal.</p>'+
+ (next.length?next.map((t,i)=>'<div class="next-step"><span class="step-number">0'+(i+1)+'</span><div><strong>'+h(t.title)+'</strong><p>'+h(t.description)+'</p></div></div>').join(""):empty("Roadmap up to date","Review your results and choose the next business milestone."))+
+ '<div class="panel-actions">'+btn("Open full roadmap","nav-journey","button-outline")+'</div>')+
+ box("Evidence over excitement",'<p class="section-note">'+h(readiness.description)+'</p><div class="checks">'+readiness.tests.map(([t,ok])=>'<div><span class="'+(ok?'pass':'fail')+'">'+(ok?'✓':'○')+'</span> '+h(t)+'</div>').join("")+'</div><div class="panel-actions">'+btn("Complete business profile","nav-business","button-outline")+'</div>')+'</div>'+
+ '<div class="section-heading"><div>'+label("ALL YOUR TOOLS")+'<h2>Build, test, improve.</h2></div></div>'+tiles();
+}
+function tiles(){
+ const items=[["journey","Adaptive roadmap","One practical task at a time.","◇"],["advisor","AI business advisor","Challenge assumptions and plan next steps.","✳"],["business","Business memory","Context stays attached to each venture.","◎"],["evidence","Evidence vault","Store real research and decisions.","▤"],["documents","Working documents","Create, edit and export deliverables.","▣"],["financials","Financial model","Test unit economics with real inputs.","◈"],["toolkit","Launch toolkit","Marketing, pitch, GBP and funding prompts.","▦"]];
+ return '<div class="tool-grid">'+items.map(i=>'<button class="tool-card" data-go="'+i[0]+'"><div class="tool-glyph">'+i[3]+'</div><h3>'+i[1]+'</h3><p>'+i[2]+'</p><span class="tool-arrow">↗</span></button>').join("")+'</div>';
+}
+function newBusiness(){
+ return '<div class="narrow">'+header("Add your business","Choose the stage and area where you need help. Nothing is locked behind an earlier stage.","CREATE A WORKSPACE")+
+ box("Build your business profile",'<form id="create-form" class="stack"><div class="form-grid">'+field("name","Business name or working idea","")+
+ pick("stage","Where are you in the business?",STAGES,"idea")+pick("industry","What type of business?",INDUSTRIES,"service")+
+ field("location","Country / market","The Bahamas")+pick("goal","What do you need first?",GOALS,"validate")+
+ '</div><div class="panel-actions"><button class="button" type="submit">Create workspace →</button>'+btn("Cancel","nav-home","button-outline")+'</div></form>')+'</div>';
+}
+function businessPage(b){
+ return header("Know your business.",'These facts guide the advisor and every recommended action. Record what you know; mark assumptions clearly.','BUSINESS MEMORY')+
+ box("Business fundamentals",'<form id="business-form"><div class="form-grid">'+
+ field("name","Business name",b.name)+pick("stage","Current stage",STAGES,b.stage)+pick("industry","Industry",INDUSTRIES,b.industry)+
+ field("location","Market / location",b.location)+pick("goal","Immediate business goal",GOALS,b.goal)+
+ field("summary","What does this business do?",b.summary,"textarea")+
+ field("customer","Who exactly is the customer?",b.customer,"textarea")+
+ field("problem","What customer problem exists?",b.problem,"textarea")+
+ field("solution","What will you deliver?",b.solution,"textarea")+
+ field("evidence","What evidence do you actually have?",b.evidence,"textarea","Only record interviews, paid sales, pilots, observations or traceable sources. Do not invent results.")+
+ '</div><div class="panel-actions"><button class="button" type="submit">Save business memory →</button>'+btn("Export profile","export-profile","button-outline")+'</div></form>')+
+ '<p class="footnote">The advisor receives this information as business context. Unverified statements are not treated as proven.</p>';
+}
+function roadmapPage(b){
+ const arr=getRoadmap(b);const custom=b.tasks?.__custom||[];const all=[...arr,...custom.map((t,i)=>({id:"custom-"+i,title:t,description:"Saved from your advisor or added manually.",tag:"Custom"}))];
+ const done=all.filter(t=>b.tasks?.[t.id]).length;
+ return header("Your roadmap, your pace.",'The tasks adapt to your current stage, sector and goal. Complete what matters; skip the theatre.','ADAPTIVE JOURNEY')+
+ '<div class="progress-card"><div><strong>'+done+" of "+all.length+'</strong><span> tasks completed</span></div><div class="progress-track"><div style="width:'+Math.round(done/Math.max(1,all.length)*100)+'%"></div></div></div>'+
+ '<div class="steps-list">'+all.map((t,i)=>'<div class="task-row"><button aria-label="'+(b.tasks?.[t.id]?'Mark incomplete: ':'Complete: ')+h(t.title)+'" class="task-check '+(b.tasks?.[t.id]?'checked':'')+'" data-task="'+h(t.id)+'">'+(b.tasks?.[t.id]?'✓':'')+'</button><div><span class="task-tag">'+h(t.tag)+'</span><h3 class="'+(b.tasks?.[t.id]?'finished':'')+'">'+h(t.title)+'</h3><p>'+h(t.description)+'</p></div></div>').join("")+'</div>'+
+ box("Add a specific task",'<form id="custom-task-form" class="inline-form"><input required maxlength="160" aria-label="Custom task" name="task" placeholder="Something important for this business"><button class="button" type="submit">Add task</button></form>') ;
+}
+function advisorPage(b){
+ const modes=ADVISOR_MODES.map(m=>'<option value="'+h(m.id)+'" '+(m.id===state.mode?'selected':'')+'>'+h(m.name)+'</option>').join("");
+ return header("An advisor that challenges you.",'AI should question the idea, expose blind spots and recommend evidence-based action—not manufacture confidence.','BUSINESS ADVISOR')+
+ '<div class="advisor-layout"><section class="panel advice-main"><div class="chat-context"><span class="pulse"></span> CONTEXT: '+h(b.name)+' · '+h(stepTag(b.stage))+' · '+h(b.industry)+'</div>'+
+ (state.messages.length?'<div class="chat-history">'+state.messages.map((m,i)=>'<div class="chat-message '+(m.role==="user"?"from-user":"from-advisor")+'"><span class="message-label">'+(m.role==="user"?"YOU":"BIZZINTEL ADVISOR")+'</span><div class="chat-copy">'+h(m.content)+'</div>'+
+ (m.role==="assistant"&&m.analysis?analysisPanel(m.analysis,i):'')+'</div>').join("")+'</div>':
+ '<div class="advisor-intro"><div class="advisor-icon">✳</div><h2>What are we solving today?</h2><p>Select a mode, then ask something useful. Advice will distinguish business facts, assumptions and missing evidence.</p></div>')+
+ '<form id="advisor-form"><div class="advisor-compose"><div class="compose-top"><label for="advisor-mode">Advisor mode</label><select id="advisor-mode" name="intent">'+modes+'</select></div>'+
+ '<textarea name="message" id="advisor-message" minlength="3" maxlength="2500" rows="4" required placeholder="Ask about a pricing decision, market test, operations issue or business risk...">'+h(getSuggestedQuestion(b,state.mode))+'</textarea>'+
+ '<div class="compose-bottom"><span>Grounded in your saved business profile.</span><button class="button" type="submit" '+(state.working||state.demo?'disabled':'')+'>'+(state.working?'Analyzing…':'Get analysis →')+'</button></div></div></form>'+
+ (state.demo?'<div class="notice-warning">AI is disabled in preview mode. The real endpoint requires a connected Supabase project and server-side OpenAI key. No simulated answers are shown.</div>':'')+
+ '</section><aside class="advisor-side">'+box("How the advisor works",'<div class="numbered"><p><b>01</b> Reads your saved business facts</p><p><b>02</b> Challenges unproven assumptions</p><p><b>03</b> Suggests up to three next actions</p><p><b>04</b> Saves responses to your workspace</p></div>')+
+ box("Data discipline",'<p class="section-note">Advice is based on your supplied business records, not live independent research. Current grants, market sizes and legal requirements are never represented as verified without sources.</p>')+'</aside></div>';
+}
+function analysisPanel(a,index){
+ const actions=(a.next_actions||[]).slice(0,3).map((v,i)=>'<div class="analysis-action"><p><strong>'+h(v.title)+'</strong><br>'+h(v.why)+'</p><button type="button" data-add-advice="'+index+':'+i+'">Add to roadmap</button></div>').join("");
+ const list=(values)=>'<ul>'+values.map(v=>'<li>'+h(v)+'</li>').join("")+'</ul>';
+ return '<div class="analysis-detail">'+(a.known_facts?.length?'<h4>Recorded facts</h4>'+list(a.known_facts):'')+
+ (a.assumptions?.length?'<h4>Assumptions / gaps</h4>'+list(a.assumptions):'')+
+ (actions?'<h4>Recommended next moves</h4>'+actions:'')+
+ (a.questions?.length?'<h4>Questions to resolve</h4>'+list(a.questions):'')+
+ '<span class="confidence">Confidence: '+h(a.confidence||"unknown")+' — based on available context</span></div>';
+}
+function evidencePage(b){
+ return header("Evidence, not guesses.",'Keep interviews, competitor research, decisions and risks in the business record. Cite source URLs when available.','RESEARCH & DECISIONS')+
+ '<div class="two-col"><section class="panel">'+
+ '<h2>Add a research note</h2><form id="note-form" class="stack">'+
+ '<label class="field"><span>Category</span><select name="category"><option value="research">Market research</option><option value="customer">Customer evidence</option><option value="competitor">Competitor</option><option value="decision">Decision</option><option value="risk">Risk</option></select></label>'+
+ field("note_title","Note title","")+field("note_content","What did you learn?","","textarea")+field("source_url","Original source URL (optional)","")+
+ '<button class="button" type="submit">Save note →</button></form></section>'+
+ '<section class="panel"><h2>Recorded evidence</h2>'+
+ (state.notes.length?state.notes.map(n=>'<article class="note"><div class="note-title"><span>'+h(n.category.toUpperCase())+'</span><button data-remove-note="'+h(n.id)+'" aria-label="Delete '+h(n.title)+'" title="Delete note">×</button></div><h3>'+h(n.title)+'</h3><p>'+h(n.content)+'</p>'+
+ (safeLink(n.source_url)?'<a href="'+h(n.source_url)+'" target="_blank" rel="noopener noreferrer">View source ↗</a>':'')+'</article>').join(""):empty("No evidence recorded yet","Start with genuine customer conversations or a verified source."))+'</section></div>';
+}
+function safeLink(s){try{const u=new URL(s);return ["https:","http:"].includes(u.protocol)}catch{return false}}
+function documentsPage(b){
+ return header("Turn work into deliverables.",'Draft, edit, save and export plans and working documents. They start from your actual business record.','DOCUMENT STUDIO')+
+ '<div class="action-strip">'+btn("Create working business plan","create-plan")+' '+btn("Create pitch outline","create-pitch","button-outline")+' '+btn("New blank document","create-blank","button-outline")+'</div>'+
+ (state.artifacts.length?'<div class="documents-grid">'+state.artifacts.map(a=>'<div class="panel doc-card"><span class="task-tag">'+h(a.kind)+'</span><h3>'+h(a.title)+'</h3><p>Updated '+h(fmtDate(a.updated_at))+'</p><div class="doc-actions"><button data-open-artifact="'+h(a.id)+'">Edit document →</button><button data-download-artifact="'+h(a.id)+'">↓</button></div></div>').join("")+'</div>':empty("Your work belongs here","Create a working plan or start with a blank document."))+
+ '<p class="footnote">No generated content is independently verified. Check all claims before external use.</p>';
+}
+function editDocument(a){
+ return header("Edit your document",'Make the draft accurate, usable and ready to share.','DOCUMENT EDITOR')+
+ box("Working draft",'<form id="artifact-form"><input type="hidden" name="id" value="'+h(a.id)+'">'+
+ field("title","Title",a.title)+field("content","Document",a.content,"textarea")+
+ '<div class="panel-actions"><button class="button" type="submit">Save document</button>'+btn("Download .md","download-current","button-outline")+btn("Back to documents","nav-documents","button-ghost")+btn("Delete document","delete-current","button-danger")+'</div></form>') ;
+}
+function financialPage(b){
+ const f=b.tasks?.__finance||{},m=model(f);
+ return header("Make the numbers make sense.",'Test contribution margin and break-even using your actual costs and expected volume.','BUSINESS ECONOMICS')+
+ '<div class="two-col">'+box("Monthly operating model",'<form id="finance-form" class="stack"><div class="form-grid">'+
+ field("price","Price per sale (BSD)",f.price||0,"number")+field("variable","Variable cost per sale (BSD)",f.variable||0,"number")+
+ field("monthlyFixed","Monthly fixed costs (BSD)",f.monthlyFixed||0,"number")+field("monthlyUnits","Expected sales per month",f.monthlyUnits||0,"number")+
+ '</div><div class="panel-actions"><button class="button" type="submit">Save model →</button></div></form>')+
+ box("Financial results",'<div class="result-list"><div>Revenue <strong>'+money(m.revenue)+'</strong></div><div>Variable contribution per sale <strong>'+money(m.contribution)+'</strong></div><div>Monthly modeled profit / loss <strong class="'+(m.profit<0?"negative":"")+'">'+money(m.profit)+'</strong></div><div>Break-even monthly sales <strong>'+(m.breakEven??"Not achievable at this price")+'</strong></div></div>'+
+ '<p class="section-note">A simple pre-tax model, not a financial statement. Real taxes, debt, capacity, returns and other costs may change the result.</p>')+'</div>';
+}
+function toolkitPage(b){
+ const packs=[
+ ["Marketing test","Create a 14-day campaign around one customer segment, one offer and a clear measurable conversion target. Do not invent testimonials, results or budgets."],
+ ["Digital profile setup","Recommend suitable Facebook, Instagram, LinkedIn and WhatsApp Business profiles; draft bios using actual offers and verified contact details only."],
+ ["Google Business Profile","First check eligibility, including in-person customer contact. Guide real categories, service areas, verification and compliant updates. Never suggest fake addresses or reviews."],
+ ["Pitch deck","Outline 10 slides covering the opportunity, problem, solution, business model, competition, real evidence, projections, team and a specific ask. Flag missing proof."],
+ ["Grant readiness","List the registration, evidence, financial and application materials needed; do not call any grant currently open without checking the issuing authority."],
+ ["AI automation audit","Identify repetitive work, its estimated frequency, the simplest viable workflow, fallback, human approval and error handling."],
+ ["Operating checklist","Create standard procedures for delivery quality, lead handling, billing, reporting, customer care and exceptions."]
+ ];
+ return header("Practical starter kits.",'Use business-specific prompts to create working deliverables in the advisor. Never confuse a prompt with a live integration.','BUSINESS TOOLS')+
+ '<div class="toolkit-grid">'+packs.map((p,i)=>'<div class="panel toolkit-card"><span class="task-tag">PLAYBOOK 0'+(i+1)+'</span><h3>'+h(p[0])+'</h3><p>'+h(p[1])+'</p><button data-toolkit="'+i+'">Use with my business →</button></div>').join("")+'</div>';
+}
+function settingsPage(b){
+ return header("Workspace controls.",'Export your records or permanently remove a business. Data security starts with ownership.','SETTINGS')+
+ box("Your workspace",'<div class="setting-row"><div><strong>Access mode</strong><p>'+(state.demo?"Demo; no server storage":"Signed-in owner; cloud storage with row-level security")+'</p></div><span class="status">'+(state.demo?"Preview":"Cloud")+'</span></div>'+
+ '<div class="setting-row"><div><strong>Business</strong><p>'+h(b.name)+'</p></div>'+btn("Download JSON backup","export-json","button-outline button-small")+'</div>'+
+ '<div class="setting-row"><div><strong>Data deletion</strong><p>Deletes the selected business and its related records.</p></div>'+btn("Delete business","delete-business","button-danger button-small")+'</div>')+
+ box("Security and scope",'<p class="section-note">This release has owner-only workspaces. Team invitations, automatic weekly alerts, live grant monitoring and social-account publishing are not connected. AI requests, when configured, are processed via the secure server function; they do not use browser-stored API secrets.</p>');
+}
+function render(){
+ const root=$("#app");
+ if(!state.ready){root.innerHTML=topbar()+'<main class="loading">Loading workspace…</main>';return}
+ if(!state.user&&!state.demo){root.innerHTML=welcome();return}
+ const b=active();
+ if(state.page==="new"||!b){root.innerHTML=topbar()+'<main class="content standalone">'+newBusiness()+'</main>';return}
+ const p=state.page;
+ let body;
+ if(p==="business")body=businessPage(b);
+ else if(p==="journey")body=roadmapPage(b);
+ else if(p==="advisor")body=advisorPage(b);
+ else if(p==="evidence")body=evidencePage(b);
+ else if(p==="documents")body=documentsPage(b);
+ else if(p==="financials")body=financialPage(b);
+ else if(p==="toolkit")body=toolkitPage(b);
+ else if(p==="settings")body=settingsPage(b);
+ else if(p==="editdoc"){const a=state.artifacts.find(x=>x.id===state.editId);body=a?editDocument(a):documentsPage(b)}
+ else body=overview(b);
+ root.innerHTML=outer(body);
+}
+async function loadExtras(){
+ const b=active();
+ if(!b){state.notes=[];state.artifacts=[];state.messages=[];return}
+ if(state.demo){return}
+ const [notes,artifacts,messages]=await Promise.all([api.listNotes(b.id),api.listArtifacts(b.id),api.listMessages(b.id)]);
+ state.notes=notes;state.artifacts=artifacts;state.messages=messages;
+}
+async function start(){
+ state.ready=false;render();
+ if(api.configured&&api.isLoggedIn()){state.user=await api.currentUser();if(state.user){
+ try{state.businesses=await api.listBusinesses();state.businessId=state.businesses[0]?.id||null;await loadExtras();}
+ catch(err){toast(err.message)} }}
+ state.ready=true;
+ const page=(location.hash||"").replace("#/","");state.page=page||"home";render();
+}
+async function saveChanges(payload){
+ const b=active();if(!b)throw Error("No business selected");
+ const updated={...payload,updated_at:new Date().toISOString()};
+ if(state.demo){Object.assign(b,updated);render();return}
+ const fresh=await api.saveBusiness(b.id,updated);
+ state.businesses=state.businesses.map(i=>i.id===b.id?fresh:i);render();
+}
+const getVals=form=>Object.fromEntries(new FormData(form).entries());
+const loaded=fn=>async(...args)=>{if(state.working)return;state.working=true;try{await fn(...args)}catch(e){toast(e.message||"Operation failed")}finally{state.working=false;render()}};
+async function createBusiness(v){
+ if(!v.name?.trim()||v.name.trim().length<2)throw Error("Enter a business name of at least two characters.");
+ const values=freshBusiness(state.user?.id||"demo",v);
+ let b;
+ if(state.demo)b={...values,id:crypto.randomUUID(),updated_at:new Date().toISOString()};
+ else b=await api.addBusiness(values);
+ state.businesses.unshift(b);state.businessId=b.id;state.notes=[];state.artifacts=[];state.messages=[];go("home");toast("Business workspace created.");
+}
+async function persistNotes(payload){
+ if(state.demo)state.notes.unshift({...payload,id:crypto.randomUUID(),created_at:new Date().toISOString()});
+ else state.notes.unshift(await api.addNote(payload));
+}
+async function persistArtifact(payload){
+ if(state.demo)state.artifacts.unshift({...payload,id:crypto.randomUUID(),created_at:new Date().toISOString(),updated_at:new Date().toISOString()});
+ else state.artifacts.unshift(await api.addArtifact(payload));
+}
+async function createDocument(kind){
+ const b=active();
+ const isPitch=kind==="pitch";const isBlank=kind==="blank";
+ const content=isBlank?"# Untitled document\n\n":isPitch?pitchText(b):planMarkdown(b);
+ await persistArtifact({business_id:b.id,owner_id:b.owner_id,kind,title:isBlank?"Untitled document":isPitch?b.name+" — Pitch outline":b.name+" — Working business plan",content});
+ toast("Document created.");render();
+}
+function pitchText(b){
+ const subjects=[["The opportunity",b.summary],["Customer problem",b.problem],["Ideal customer",b.customer],["The solution",b.solution],["Market & competition","Verify the market and actual alternatives."],["Business model","Add actual pricing, margin and buying frequency."],["Go-to-market","Describe the first measurable customer acquisition channel."],["Evidence / traction",b.evidence],["Risks & mitigation","Describe the three main business risks."],["Team, ask & milestone","List real people, funding needs and next milestone."]];
+ return "# "+b.name+" — Working pitch\n\n"+subjects.map((x,i)=>"## Slide "+(i+1)+": "+x[0]+"\n"+(x[1]||"Evidence required.")+"\n").join("\n")+"\nDraft only. Verify all facts and figures.\n";
+}
+function exportProfile(){const b=active();download(slug(b.name)+"-profile.json",JSON.stringify(b,null,2),"application/json")}
+function exportBackup(){
+ const b=active();const payload={exportedAt:new Date().toISOString(),business:b,notes:state.notes,artifacts:state.artifacts,messages:state.messages};
+ download(slug(b.name)+"-backup.json",JSON.stringify(payload,null,2),"application/json");
+}
+document.addEventListener("click",async e=>{
+ const nav=e.target.closest("[data-go]");if(nav){go(nav.dataset.go);return}
+ const task=e.target.closest("[data-task]");if(task){await loaded(async()=>{const b=active();const tasks={...(b.tasks||{}),[task.dataset.task]:!b.tasks?.[task.dataset.task]};await saveChanges({tasks});})(e);return}
+ const action=e.target.closest("[data-action]");
+ if(action){
+  const a=action.dataset.action;
+  if(a==="menu"){state.menu=!state.menu;render();return}
+  if(a==="demo"){demoSetup();return}
+  if(a==="show-info"){toast("Explore the working demo while cloud setup is pending.");return}
+  if(a.startsWith("show-")){state.authMode=a.slice(5);render();return}
+  if(a==="exitdemo"){state.demo=false;state.businesses=[];state.businessId=null;go("home");return}
+  if(a==="signout"){await loaded(async()=>{await api.signOut();state.user=null;state.businesses=[];state.businessId=null;go("home")})();return}
+  if(a==="create"){go("new");return}
+  if(a.startsWith("nav-")){go(a.slice(4));return}
+  if(a==="export-profile"){exportProfile();return}
+  if(a==="export-json"){exportBackup();return}
+  if(a==="create-plan"||a==="create-pitch"||a==="create-blank"){await loaded(()=>createDocument(a.slice(7)))();return}
+  if(a==="download-current"){const art=state.artifacts.find(x=>x.id===state.editId);if(art)download(slug(art.title)+".md",art.content,"text/markdown");return}
+  if(a==="delete-current"){
+   if(!confirm("Permanently delete this document?"))return;
+   await loaded(async()=>{if(!state.demo)await api.removeArtifact(state.editId);state.artifacts=state.artifacts.filter(x=>x.id!==state.editId);go("documents");toast("Document deleted.")})();return
+  }
+  if(a==="delete-business"){
+   if(!confirm("Permanently delete this business and ALL of its notes, advisor history and documents?"))return;
+   await loaded(async()=>{const id=state.businessId;if(!state.demo)await api.removeBusiness(id);state.businesses=state.businesses.filter(x=>x.id!==id);state.businessId=state.businesses[0]?.id||null;await loadExtras();go("home");toast("Business removed.")})();return;
+  }
+ }
+ const note=e.target.closest("[data-remove-note]");
+ if(note){if(!confirm("Delete this research note?"))return;await loaded(async()=>{if(!state.demo)await api.removeNote(note.dataset.removeNote);state.notes=state.notes.filter(n=>n.id!==note.dataset.removeNote);toast("Note deleted.")})();return}
+ const doc=e.target.closest("[data-open-artifact]");
+ if(doc){state.editId=doc.dataset.openArtifact;go("editdoc");return}
+ const save=e.target.closest("[data-download-artifact]");
+ if(save){const item=state.artifacts.find(x=>x.id===save.dataset.downloadArtifact);if(item)download(slug(item.title)+".md",item.content,"text/markdown");return}
+ const kit=e.target.closest("[data-toolkit]");
+ if(kit){
+  const subjects=["marketing","digital profiles","Google Business Profile","pitch deck","funding","automation","operations"];
+  const intent=["marketing","marketing","ask","funding","funding","operations","operations"][Number(kit.dataset.toolkit)];
+  state.mode=intent;go("advisor");const textarea=$("#advisor-message");if(textarea)textarea.value="Create a practical "+subjects[Number(kit.dataset.toolkit)]+" working guide for my actual business. Use my saved facts; identify missing details and what needs official verification. Do not invent results, compliance rules or current opportunities.";
+  return;
+ }
+ const add=e.target.closest("[data-add-advice]");
+ if(add){
+  const [idx,j]=add.dataset.addAdvice.split(":").map(Number);const advice=state.messages[idx]?.analysis?.next_actions?.[j];
+  if(advice?.title)await loaded(async()=>{
+    const b=active();const custom=[...(b.tasks?.__custom||[])];if(!custom.includes(advice.title))custom.push(advice.title);
+    await saveChanges({tasks:{...(b.tasks||{}),__custom:custom}});toast("Added to your roadmap.")})();
+ }
+});
+document.addEventListener("change",async e=>{
+ if(e.target.id==="business-switch"){
+  state.businessId=e.target.value;await loaded(async()=>{await loadExtras();go("home")})();return;
+ }
+ if(e.target.id==="advisor-mode"){state.mode=e.target.value;const t=$("#advisor-message");if(t)t.value=getSuggestedQuestion(active(),state.mode);}
+});
+document.addEventListener("submit",async e=>{
+ e.preventDefault();const f=e.target,v=getVals(f);
+ if(f.id==="auth-form"){await loaded(async()=>{
+   if(state.authMode==="signup"){const r=await api.signUp(v.email,v.password);if(r?.access_token){await api.signIn(v.email,v.password);state.user=await api.currentUser();state.businesses=await api.listBusinesses();}else {state.authMode="login";toast("Check your email for a confirmation link before signing in.");}}
+   else if(state.authMode==="reset"){await api.resetPassword(v.email);state.authMode="login";toast("If the account exists, a recovery email has been sent.")}
+   else{await api.signIn(v.email,v.password);state.user=await api.currentUser();state.businesses=await api.listBusinesses();}
+   state.businessId=state.businesses[0]?.id||null;await loadExtras();go("home");
+ })();return}
+ if(f.id==="create-form"){await loaded(()=>createBusiness(v))();return}
+ if(f.id==="business-form"){await loaded(async()=>{
+  const keys=["name","stage","industry","location","goal","summary","customer","problem","solution","evidence"];const patch=Object.fromEntries(keys.map(k=>[k,String(v[k]||"").trim()]));
+  if(patch.name.length<2)throw Error("The business name is too short.");
+  await saveChanges(patch);toast("Business memory saved.");
+ })();return}
+ if(f.id==="custom-task-form"){await loaded(async()=>{
+  const b=active(),custom=[...(b.tasks?.__custom||[])],name=String(v.task||"").trim();
+  if(!name)throw Error("Enter a task.");
+  if(custom.length>=25)throw Error("Custom task limit reached.");
+  custom.push(name.slice(0,160));await saveChanges({tasks:{...(b.tasks||{}),__custom:custom}});toast("Task added.");
+ })();return}
+ if(f.id==="finance-form"){await loaded(async()=>{
+  const b=active(),finance=Object.fromEntries(["price","variable","monthlyFixed","monthlyUnits"].map(k=>[k,Number(v[k])||0]));
+  await saveChanges({tasks:{...(b.tasks||{}),__finance:finance}});toast("Financial model saved.");
+ })();return}
+ if(f.id==="note-form"){await loaded(async()=>{
+  if(!v.note_title?.trim())throw Error("Add a note title.");
+  if(v.source_url&& !safeLink(v.source_url))throw Error("Enter a valid http or https source URL.");
+  const b=active();await persistNotes({business_id:b.id,owner_id:b.owner_id,category:v.category,title:v.note_title.slice(0,160),content:String(v.note_content||""),source_url:String(v.source_url||"")});
+  toast("Evidence saved.");
+ })();return}
+ if(f.id==="artifact-form"){await loaded(async()=>{
+  const id=v.id,item=state.artifacts.find(x=>x.id===id);if(!item)throw Error("Document not found.");
+  if(state.demo){item.title=v.title;item.content=v.content;item.updated_at=new Date().toISOString();}
+  else{const rows=await api.saveArtifact(id,v.content,v.title);Object.assign(item,rows[0]||{});}
+  toast("Document saved.");
+ })();return}
+ if(f.id==="advisor-form"){await loaded(async()=>{
+  if(state.demo)throw Error("Live AI requires cloud setup and a signed-in account.");
+  const b=active(),text=String(v.message||"").trim();if(text.length<3)throw Error("Enter a more specific question.");
+  const answer=await api.askAdvisor(b.id,v.intent,text);
+  if(!answer?.result)throw Error("No advice returned.");
+  state.messages=await api.listMessages(b.id);
+  toast("Analysis saved to your business history.");
+ })();return}
+});
+window.addEventListener("hashchange",()=>{
+ const p=(location.hash||"").replace("#/","")||"home";
+ if(["home","business","journey","advisor","evidence","documents","financials","toolkit","settings","new"].includes(p)){state.page=p;render()}
+});
+start();
