@@ -23,16 +23,6 @@ export const GOALS=[
 {id:"digital",name:"Improve online presence"},
 {id:"operations",name:"Improve business operations"}
 ];
-export const ADVISOR_MODES=[
-{id:"assessment",name:"Assess my business",hint:"Assess evidence, risks and the next practical test."},
-{id:"challenge",name:"Challenge assumptions",hint:"Identify what could make this plan fail."},
-{id:"roadmap",name:"Prioritize next steps",hint:"Get three actions, ordered by evidence and impact."},
-{id:"marketing",name:"Customer acquisition",hint:"Design one measurable acquisition test."},
-{id:"finance",name:"Pricing & finances",hint:"Spot missing financial facts and explore the economics."},
-{id:"funding",name:"Funding readiness",hint:"Find what an application or pitch still needs."},
-{id:"operations",name:"Operations",hint:"Find bottlenecks and practical controls."},
-{id:"ask",name:"Ask anything",hint:"Ask a specific question based on your business."}
-];
 const CORE={
  idea:[
  ["define-customer","Name the customer with the problem","Describe a specific customer group and when the problem arises."],
@@ -107,17 +97,4 @@ export function getReadiness(b){
  ];
  const completed=tests.filter(x=>x[1]).length;
  return {tests,completed,total:tests.length,description:completed===4?"Basic business context is recorded. Validate the quality of your evidence before making major commitments.":"Missing business inputs must be resolved before a confident recommendation."};
-}
-export function getSuggestedQuestion(b,mode="assessment"){
- const options={
- assessment:"Assess this business as it stands. Separate verified facts, assumptions and evidence gaps. What are the three most useful next moves?",
- challenge:"What are the weakest assumptions in this business and the cheapest ways to test them?",
- roadmap:"Using my business stage, industry, and goals, prioritize my next three measurable actions.",
- marketing:"Design one small customer acquisition experiment with a clear offer, message, channel and success metric.",
- finance:"What numbers are missing to evaluate my pricing, contribution margin, cash flow and break-even?",
- funding:"Assess my funding readiness, identify missing documents and explain what I must verify before applying.",
- operations:"Identify likely operational bottlenecks and propose a low-complexity process improvement.",
- ask:"What should I focus on next based on the actual evidence in this business?"
- };
- return options[mode]||options.assessment;
 }
