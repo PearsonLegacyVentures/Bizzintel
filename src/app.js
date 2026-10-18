@@ -190,6 +190,7 @@ function settingsPage(b){
 function render(){
  const root=$("#app");
  if(!state.ready){root.innerHTML=topbar()+'<main class="loading">Loading workspace…</main>';return}
+ if(state.authMode==="newpassword"&&state.user){root.innerHTML=topbar()+'<main class="welcome"><div class="welcome-content"><span class="eyebrow">ACCOUNT SECURITY</span><h1>Choose a new password.</h1><p>Use a unique password that you do not share with anyone.</p></div><div class="auth-card"><h2>Reset password</h2><form id="new-password-form" class="stack"><label class="field"><span>New password</span><input name="password" type="password" autocomplete="new-password" minlength="8" required></label><button class="button button-wide" type="submit">Update password →</button></form></div></main>';return}
  if(!state.user&&!state.demo){root.innerHTML=welcome();return}
  const b=active();
  if(state.page==="new"||!b){root.innerHTML=topbar()+'<main class="content standalone">'+newBusiness()+'</main>';return}
@@ -216,6 +217,8 @@ async function loadExtras(){
 }
 async function start(){
  state.ready=false;render();
+ const redirect=api.consumeAuthRedirect?.();
+ if(redirect==="recovery")state.authMode="newpassword";
  if(api.configured&&api.isLoggedIn()){state.user=await api.currentUser();if(state.user){
  try{state.businesses=await api.listBusinesses();state.businessId=state.businesses[0]?.id||null;await loadExtras();}
  catch(err){toast(err.message)} }}
@@ -319,6 +322,9 @@ document.addEventListener("change",async e=>{
 });
 document.addEventListener("submit",async e=>{
  e.preventDefault();const f=e.target,v=getVals(f);
+ if(f.id==="new-password-form"){await loaded(async()=>{
+  await api.changePassword(v.password);state.authMode="login";toast("Password updated.");go("home");
+ })();return}
  if(f.id==="auth-form"){await loaded(async()=>{
    if(state.authMode==="signup"){const r=await api.signUp(v.email,v.password);if(r?.access_token){await api.signIn(v.email,v.password);state.user=await api.currentUser();state.businesses=await api.listBusinesses();}else {state.authMode="login";toast("Check your email for a confirmation link before signing in.");}}
    else if(state.authMode==="reset"){await api.resetPassword(v.email);state.authMode="login";toast("If the account exists, a recovery email has been sent.")}
