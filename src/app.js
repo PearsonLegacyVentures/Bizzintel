@@ -27,7 +27,7 @@ function topbar(){
  (state.user?btn("Sign out","signout","button-ghost button-small"):'')+'</div></header>';
 }
 function navigation(){
- const items=[["home","Overview","◫"],["business","Business profile","◎"],["journey","Your roadmap","◇"],["playbooks","Step-by-step guides","▤"],["evidence","Evidence vault","▤"],["documents","Documents","▣"],["financials","Financials","◈"],["toolkit","Launch toolkit","▦"],["settings","Settings","⚙"]];
+ const items=[["home","Overview","◫"],["business","Business profile","◎"],["journey","Your roadmap","◇"],["playbooks","Step-by-step guides","▤"],["evidence","Evidence vault","▤"],["documents","Documents","▣"],["financials","Financials","◈"],["settings","Settings","⚙"]];
  return '<aside class="sidebar '+(state.menu?'open':'')+'"><div class="sidebar-title">WORKSPACE</div>'+
  '<div class="business-picker"><label for="business-switch">SELECT A BUSINESS</label><select id="business-switch">'+state.businesses.map(b=>'<option value="'+h(b.id)+'" '+(b.id===state.businessId?'selected':'')+'>'+h(b.name)+'</option>').join("")+'</select>'+
  '<button class="subtle-add" data-action="create" type="button">＋ Add a business</button></div>'+
@@ -52,7 +52,7 @@ function welcome(){
  (state.authMode!=="reset"?'<label class="field"><span>Password</span><input required minlength="8" name="password" type="password" autocomplete="'+(state.authMode==="signup"?"new-password":"current-password")+'"></label>':'')+
  '<button class="button button-wide" type="submit">'+(state.authMode==="signup"?"Create account":state.authMode==="reset"?"Send recovery email":"Sign in")+' →</button></form>'+
  '<div class="auth-links"><button data-action="show-login">Sign in</button><button data-action="show-signup">Create account</button><button data-action="show-reset">Forgot password?</button></div>':
- '<h2>Cloud access is not configured yet.</h2><p>The preview is functional without an account. Secure cloud storage and live AI require a dedicated Supabase project.</p><div class="divider"></div>'+
+ '<h2>Cloud access is not configured yet.</h2><p>The preview is functional without an account. Secure accounts and cross-device saving require a dedicated Supabase project. No OpenAI API or subscription is required for these lessons.</p><div class="divider"></div>'+
  '<div class="info-list"><span>✓ Stage-specific journeys</span><span>✓ Multi-business workspace</span><span>✓ Guided founder playbooks</span></div>'+
  '<button data-action="demo" class="button button-wide">Explore the demo →</button>')+
  '</div></main>';
@@ -77,10 +77,15 @@ function overview(b){
  (next.length?next.map((t,i)=>'<div class="next-step"><span class="step-number">0'+(i+1)+'</span><div><strong>'+h(t.title)+'</strong><p>'+h(t.description)+'</p></div></div>').join(""):empty("Roadmap up to date","Review your results and choose the next business milestone."))+
  '<div class="panel-actions">'+btn("Open full roadmap","nav-journey","button-outline")+'</div>')+
  box("Evidence over excitement",'<p class="section-note">'+h(readiness.description)+'</p><div class="checks">'+readiness.tests.map(([t,ok])=>'<div><span class="'+(ok?'pass':'fail')+'">'+(ok?'✓':'○')+'</span> '+h(t)+'</div>').join("")+'</div><div class="panel-actions">'+btn("Complete business profile","nav-business","button-outline")+'</div>')+'</div>'+
- '<div class="section-heading"><div>'+label("ALL YOUR TOOLS")+'<h2>Build, test, improve.</h2></div></div>'+tiles();
+ '<div class="section-heading"><div>'+label("START WITH YOUR GOAL")+'<h2>Recommended playbooks</h2></div></div>'+
+ '<div class="recommended-grid">'+orderedPlaybooks(b).slice(0,3).map(p=>{
+ const progress=playbookProgress(b.tasks||{},p);
+ return '<button type="button" class="recommended-card" data-open-playbook="'+h(p.id)+'"><small>MODULE '+p.number+'</small><strong>'+h(p.title)+'</strong><span>'+progress.complete+' of '+progress.total+' complete →</span></button>';
+ }).join("")+'</div>'+
+ '<div class="section-heading"><div>'+label("YOUR TOOLS")+'<h2>Everything in one place.</h2></div></div>'+tiles();
 }
 function tiles(){
- const items=[["journey","Adaptive roadmap","One practical task at a time.","◇"],["playbooks","Step-by-step guides","Follow the modules in your own order.","✳"],["business","Business memory","Context stays attached to each venture.","◎"],["evidence","Evidence vault","Store real research and decisions.","▤"],["documents","Working documents","Create, edit and export deliverables.","▣"],["financials","Financial model","Test unit economics with real inputs.","◈"],["toolkit","Launch toolkit","Marketing, pitch, GBP and funding prompts.","▦"]];
+ const items=[["journey","Adaptive roadmap","One practical task at a time.","◇"],["playbooks","Step-by-step guides","Follow the modules in your own order.","✳"],["business","Business memory","Context stays attached to each venture.","◎"],["evidence","Evidence vault","Store real research and decisions.","▤"],["documents","Working documents","Create, edit and export deliverables.","▣"],["financials","Financial model","Test unit economics with real inputs.","◈"]];
  return '<div class="tool-grid">'+items.map(i=>'<button class="tool-card" data-go="'+i[0]+'"><div class="tool-glyph">'+i[3]+'</div><h3>'+i[1]+'</h3><p>'+i[2]+'</p><span class="tool-arrow">↗</span></button>').join("")+'</div>';
 }
 function newBusiness(){
@@ -123,7 +128,7 @@ function playbooksPage(b){
     '<p class="playbook-stage">'+h(p.stages.map(id=>STAGES.find(x=>x.id===id)?.short||id).join(' · '))+'</p>'+
     '<div class="playbook-meter"><span style="width:'+count.percent+'%"></span></div><div class="playbook-card-bottom"><small>'+count.complete+' / '+count.total+' steps</small><button data-open-playbook="'+h(p.id)+'">Open guide →</button></div></article>';
  }).join("")+'</div>'+
- '<p class="footnote">BizzIntel provides structured lessons and templates, not an automated advisor. Some instructional copy is draft content awaiting final review of Amar Pearson’s methods.</p>';
+ '<p class="footnote">BizzIntel provides structured lessons and templates, not an automated advisor. The module topics were requested by the founder. Detailed draft instructions need final founder review before public launch.</p>';
 }
 function lessonPage(b){
  const p=getPlaybook(state.playbookId)||PLAYBOOKS[0];
@@ -182,7 +187,6 @@ function financialPage(b){
  box("Financial results",'<div class="result-list"><div>Revenue <strong>'+money(m.revenue)+'</strong></div><div>Variable contribution per sale <strong>'+money(m.contribution)+'</strong></div><div>Monthly modeled profit / loss <strong class="'+(m.profit<0?"negative":"")+'">'+money(m.profit)+'</strong></div><div>Break-even monthly sales <strong>'+(m.breakEven??"Not achievable at this price")+'</strong></div></div>'+
  '<p class="section-note">A simple pre-tax model, not a financial statement. Real taxes, debt, capacity, returns and other costs may change the result.</p>')+'</div>';
 }
-function toolkitPage(b){return playbooksPage(b)}
 function settingsPage(b){
  return header("Workspace controls.",'Export your records or permanently remove a business. Data security starts with ownership.','SETTINGS')+
  box("Your workspace",'<div class="setting-row"><div><strong>Access mode</strong><p>'+(state.demo?"Demo; no server storage":"Signed-in owner; cloud storage with row-level security")+'</p></div><span class="status">'+(state.demo?"Preview":"Cloud")+'</span></div>'+
@@ -284,6 +288,12 @@ document.addEventListener("click",async e=>{
   if(a==="signout"){await loaded(async()=>{await api.signOut();state.user=null;state.businesses=[];state.businessId=null;go("home")})();return}
   if(a==="create"){go("new");return}
   if(a==="open-recommended"){state.playbookId=orderedPlaybooks(active())[0].id;state.stepIndex=0;go("lesson");return}
+  if(a==="lesson-uncomplete"){await loaded(async()=>{
+    const b=active(),p=getPlaybook(state.playbookId);
+    if(!p)return;
+    const tasks={...(b.tasks||{})}; delete tasks[stepKey(p.id,state.stepIndex)];
+    await saveChanges({tasks});toast("Step reopened.");
+  })();return}
   if(a==="copy-prompt"){const p=getPlaybook(state.playbookId);if(!p)return;const text=stepPrompt(p,p.steps[state.stepIndex],active());try{await navigator.clipboard.writeText(text);toast("Prompt copied.");}catch{const area=document.querySelector(".lesson-prompt");area?.focus();area?.select();toast("Select and copy the highlighted prompt.");}return}
   if(a.startsWith("nav-")){go(a.slice(4));return}
   if(a==="export-profile"){exportProfile();return}
@@ -295,7 +305,7 @@ document.addEventListener("click",async e=>{
    await loaded(async()=>{if(!state.demo)await api.removeArtifact(state.editId);state.artifacts=state.artifacts.filter(x=>x.id!==state.editId);go("documents");toast("Document deleted.")})();return
   }
   if(a==="delete-business"){
-   if(!confirm("Permanently delete this business and ALL of its notes, advisor history and documents?"))return;
+   if(!confirm("Permanently delete this business and ALL of its notes, workbook progress and documents?"))return;
    await loaded(async()=>{const id=state.businessId;if(!state.demo)await api.removeBusiness(id);state.businesses=state.businesses.filter(x=>x.id!==id);state.businessId=state.businesses[0]?.id||null;await loadExtras();go("home");toast("Business removed.")})();return;
   }
  }
