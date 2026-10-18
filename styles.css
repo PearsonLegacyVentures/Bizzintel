@@ -35,3 +35,47 @@
 @media(max-width:1100px){.lesson-layout{grid-template-columns:1fr}.lesson-index{position:static}.lesson-step-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:900px){.recommended-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.recommended-grid,.lesson-step-list{grid-template-columns:1fr}.lesson-top{margin-bottom:15px}.lesson-work h2{font-size:24px}.lesson-action-row{flex-direction:column}.lesson-action-row .button{width:100%}.lesson-prompt{min-height:250px!important}}
+
+
+/* SWAGv2 – practical-learning UI. Clear hierarchy, compact controls, readable workbook. */
+.lesson-work{background:linear-gradient(160deg,#15252a 0%,#101d23 60%);box-shadow:0 18px 48px rgba(0,0,0,.1)}
+.lesson-work>h2{font-size:clamp(24px,2.5vw,34px);max-width:700px;margin:13px 0 11px;line-height:1.14}
+.lesson-lead{font-size:15px;line-height:1.75;max-width:680px;color:#b9d0c7}
+.lesson-instructions{counter-reset:task;list-style:none;padding:0;display:grid;gap:12px;margin:15px 0 0}
+.lesson-instructions li{position:relative;padding:13px 13px 13px 47px;border:1px solid #304a48;background:#13262a;border-radius:10px;color:#e6f1e9;font-size:14px;line-height:1.6;counter-increment:task}
+.lesson-instructions li::before{content:counter(task,decimal-leading-zero);position:absolute;left:13px;top:12px;color:var(--accent);font-size:11px;letter-spacing:.08em;font-weight:800}
+.lesson-example{margin-top:18px;padding:18px 21px;border:1px solid #3d5d48;border-radius:12px;background:linear-gradient(105deg,#20392d,#19302e)}
+.lesson-example strong{font-size:10px;letter-spacing:.14em;color:#c8fb94}
+.lesson-example p{font-size:13px;color:#d1e3d4;line-height:1.72;margin:10px 0 0}
+.lesson-deliverable{background:#172c2a;border-radius:12px;border:1px solid #3e5c50;margin-top:17px;padding:19px!important}
+.lesson-deliverable p{color:#e5eee7;font-weight:590}
+.lesson-evidence{font-size:12px!important;color:#a4c3b2!important;font-weight:normal!important}
+.lesson-warning{border-left:3px solid #c3a57f;background:#2a2827;border-radius:0 9px 9px 0;padding:13px 18px;margin:17px 0 4px}
+.lesson-warning strong{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#f0d8b2}
+.lesson-warning p{margin:5px 0 0;color:#dfd0bc;font-size:13px}
+.lesson-workbook{margin-top:25px;border:1px solid #537257;background:#192a26;padding:clamp(17px,2.2vw,26px);border-radius:14px}
+.lesson-workbook h3{font-size:21px;margin:9px 0 23px}
+.lesson-workbook .field textarea{min-height:90px}
+.lesson-workbook #step-notes{min-height:160px}
+.lesson-action-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:19px}
+.prompt-drawer{background:#111f25;border:1px solid #334c4a;border-radius:12px;padding:17px 19px;margin-top:18px}
+.prompt-drawer summary{cursor:pointer;font-size:13px;color:#d8eee0;font-weight:750;list-style:none;display:flex;justify-content:space-between;gap:15px}
+.prompt-drawer summary::-webkit-details-marker{display:none}
+.prompt-drawer[open] summary{margin-bottom:16px}
+.prompt-drawer p{font-size:12px}
+.prompt-drawer .lesson-prompt{min-height:155px}
+.resource-link{display:block;font-size:13px;color:var(--accent);padding:6px 0;text-decoration:none}
+.resource-link:hover{text-decoration:underline}
+.export-toolbar{margin:-3px 0 17px;display:flex;justify-content:flex-end}
+.lesson-index{max-height:calc(100vh - 100px);overflow:auto}
+.lesson-index .lesson-step-list{gap:2px}
+.lesson-link{min-height:54px}
+.lesson-link.is-active{border-color:#668e62}
+.lesson-top .button{min-height:37px;padding:6px 11px}
+.playbook-card-bottom button{font-weight:750;min-height:38px;padding:8px 0}
+.toolkit-card{display:flex;flex-direction:column}
+.toolkit-card .playbook-card-bottom{margin-top:auto}
+.toolkit-card .playbook-stage{margin-bottom:10px}
+.toolkit-card .playbook-meter{width:100%}
+@media(max-width:1100px){.lesson-index{max-height:none;overflow:visible}}
+@media(max-width:650px){.lesson-instructions li{padding-left:43px}.lesson-workbook{padding:16px}.lesson-workbook #step-notes{min-height:170px}.export-toolbar{justify-content:stretch}.export-toolbar .button{width:100%}}
