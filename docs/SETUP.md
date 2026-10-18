@@ -1,23 +1,35 @@
-# Release 1 and 2 setup
+# BizzIntel setup — founder-led curriculum
 
-## GitHub and Cloudflare
-- Repo: PearsonLegacyVentures/Bizzintel; static Cloudflare Pages build; Node 22.
-- Build: npm run build; output: dist. Project stays noindexed until ready for public registration.
-- Preview first: do not announce production before authentication and RLS tests pass.
+## 1. Preview without any paid AI
+- Clone \`PearsonLegacyVentures/Bizzintel\`.
+- Use Node.js 22+; run \`npm run check\`, \`npm test\`, and \`npm run build\`.
+- Cloudflare Pages: no framework preset; build command \`npm run build\`; output \`dist\`.
+- Build is intentionally \`noindex\` until real launch preparation and editorial review.
+- With no credentials the application runs in a **session-only demo mode** (not persisted).
 
-## Dedicated Supabase (required for actual cloud features)
-1. Create a NEW dedicated Supabase project called BizzIntel in the correct organization after reviewing any costs. Do not reuse Tranquilitas Dispatch or Uber Nassau.
-2. Run the reviewed migration in supabase/migrations on the new project. Confirm RLS and indexes.
-3. Configure Auth site URL and redirect allowlist for your actual preview and production domains. Turn on email verification for public sign-ups and rate limiting.
-4. For local development, copy `config.example.js` to `config.js` and enter ONLY the project URL and publishable (or legacy anon) key. For Cloudflare Pages set `BIZZINTEL_SUPABASE_URL` and `BIZZINTEL_SUPABASE_PUBLISHABLE_KEY` as build environment variables; the build safely creates public `config.js`. Never use a service-role or OpenAI key in these variables.
-5. Deploy Edge Function advisor with JWT verification enabled. Secrets: OPENAI_API_KEY; optional OPENAI_MODEL; ALLOWED_ORIGINS as comma-separated exact https origins. Project SUPABASE_URL/ANON_KEY/SERVICE_ROLE_KEY are server-only.
-6. Test create / edit / delete as two separate real users, verify cross-user queries return no other user's records, confirm auth refresh, email confirmation, password recovery and logout.
-7. Test the advisor, usage limit and that wrong-user business IDs are rejected. Review cost monitoring, rate limits and security advisors.
-8. Verify Cloudflare mobile/desktop and final domain CORS and Auth redirect settings, then authorize production deployment.
+## 2. Optional cloud accounts and workbook saving
+- Create a *dedicated* BizzIntel Supabase project under the intended organization after confirming pricing. Never reuse Tranquilitas Dispatch or unrelated customer databases.
+- Run \`supabase/migrations/20261018160000_initial_bizzintel.sql\`.
+- Confirm RLS and test isolation using two distinct accounts and businesses.
+- Configure email verification, Auth site/redirect URLs and password reset for the final Cloudflare domain.
+- Locally, copy \`config.example.js\` to \`config.js\` and insert the project URL plus **public publishable key** only.
+- For Cloudflare builds use \`BIZZINTEL_SUPABASE_URL\` and \`BIZZINTEL_SUPABASE_PUBLISHABLE_KEY\` environment values.
+- Never include an OpenAI key, service-role key or other private credential in the browser.
 
-## Important limitations
-- Currently owner-only: team invitations and granular collaborator roles remain future work.
-- History is persisted as dated research notes, advisor messages and editable artifacts. Full automatic per-field undo/version snapshots are not implemented.
-- The advisor uses the business context and saved messages; it does NOT browse current sources. The interface deliberately labels claims as assumptions when not documented.
-- Live grant and tender discovery, social media publishing, automatic weekly emails, payments and agent-driven browser workflows are later releases.
-- In demo mode, data lives in memory, not cloud. Never use demo mode for sensitive information.
+## 3. Review and maintain the course
+- Curriculum source is \`src/playbooks.js\`. Editorial policy: \`docs/PLAYBOOK_EDITORIAL.md\`.
+- No AI advisor, model backend or paid AI API is involved in delivering lessons.
+- Optional prompts are copied by the learner into their own tool if desired.
+- Confirm references and local legal / compliance guidance before public publishing.
+
+## 4. Before public launch
+- Verify mobile and desktop routes, forms, clipboard copy, exports, workbook-saving and deletion flows.
+- Test Supabase sign-up/sign-in/reset and cross-account data isolation.
+- Verify public Pages deployment and URL paths; review access policies and Auth redirect allowlists.
+- Test course wording with actual entrepreneurs and validate the founder's final methods.
+
+## Known limits
+- No live backend or deployed domain has been verified yet.
+- Reports and grant opportunities are guided workflows, **not** scheduled background jobs.
+- Social media accounts and Google Business Profiles are not created automatically.
+- Learners are owner-only; team permissions require a later version.
