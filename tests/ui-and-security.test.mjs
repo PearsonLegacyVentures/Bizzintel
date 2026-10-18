@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 import {STAGES,INDUSTRIES,GOALS,getRoadmap,getReadiness} from "../src/journeys.js";
-import {PLAYBOOKS,getPlaybook,stepKey,playbookProgress,orderedPlaybooks,stepPrompt} from "../src/playbooks.js";
+import {PLAYBOOKS,getPlaybook,stepKey,responseKey,getStepResponse,isStepDone,playbookProgress,orderedPlaybooks,stepPrompt,workbookMarkdown} from "../src/playbooks.js";
 import {esc,model,money,planMarkdown,freshBusiness,slug,download} from "../src/logic.js";
 const AsyncFunction=Object.getPrototypeOf(async function(){}).constructor;
 test("welcome, ten main views and guided lesson render with no AI required",async()=>{
@@ -13,12 +13,12 @@ test("welcome, ten main views and guided lesson render with no AI required",asyn
  const window={addEventListener(){}}, location={hash:"#/home"};
  const app=await new AsyncFunction(
   "api","STAGES","INDUSTRIES","GOALS","getRoadmap","getReadiness",
-  "PLAYBOOKS","getPlaybook","stepKey","playbookProgress","orderedPlaybooks","stepPrompt",
+  "PLAYBOOKS","getPlaybook","stepKey","responseKey","getStepResponse","isStepDone","playbookProgress","orderedPlaybooks","stepPrompt","workbookMarkdown",
   "h","model","money","planMarkdown","freshBusiness","slug","download",
   "document","location","window","scrollTo","crypto",code
  )(
   {configured:false},STAGES,INDUSTRIES,GOALS,getRoadmap,getReadiness,
-  PLAYBOOKS,getPlaybook,stepKey,playbookProgress,orderedPlaybooks,stepPrompt,
+  PLAYBOOKS,getPlaybook,stepKey,responseKey,getStepResponse,isStepDone,playbookProgress,orderedPlaybooks,stepPrompt,workbookMarkdown,
   esc,model,money,planMarkdown,freshBusiness,slug,download,
   document,location,window,()=>{}, {randomUUID:()=>"77eb3537-4a71-474c-9a99-05653431a782"}
  );
@@ -32,7 +32,9 @@ test("welcome, ten main views and guided lesson render with no AI required",asyn
  await handlers.click({target:{closest:s=>s==="[data-open-playbook]"?playbook:null}});
  assert.equal(app.state.playbookId,"gbp");assert.equal(app.state.page,"lesson");
  assert.match(root.innerHTML,/Google Business Profile/);
- assert.match(root.innerHTML,/Optional copyable prompt/);
+ assert.match(root.innerHTML,/Optional: copy a useful ChatGPT prompt/);
+ assert.match(root.innerHTML,/How to do it/);
+ assert.match(root.innerHTML,/Common mistake/);
  await handlers.click({target:{closest:s=>s==="[data-open-step]"?{dataset:{openStep:"2"}}:null}});
  assert.equal(app.state.stepIndex,2);
  assert.match(root.innerHTML,/Complete the business details/);
@@ -57,4 +59,14 @@ test("no OpenAI endpoint or key dependency exists in deployed application",async
  const config=await readFile("config.example.js","utf8");
  assert.match(config,/supabasePublishableKey/);
  assert.doesNotMatch(config,/OPENAI_API_KEY/);
+});
+
+test("curriculum does not depend on an API model or scheduled grant crawler",async()=>{
+ const app=await readFile("src/app.js","utf8");
+ const backend=await readFile("src/backend.js","utf8");
+ const playbooks=await readFile("src/playbooks.js","utf8");
+ assert.doesNotMatch(app,/askAdvisor|advisor-form/);
+ assert.doesNotMatch(backend,/openai|functions\/v1\/advisor/i);
+ assert.match(playbooks,/workbookMarkdown/);
+ assert.match(playbooks,/decision/);
 });
