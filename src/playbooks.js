@@ -1217,3 +1217,33 @@ export function stepPrompt(module,step,business={}){
   "Ask for missing facts before writing a final answer. No invented results, legal requirements, competitors or funding opportunities."
  ].join("\n");
 }
+
+
+export function workbookMarkdown(business){
+ const tasks=business?.tasks||{};
+ const line=s=>String(s??"").replace(/[\r\n]+/g," ").trim();
+ const sections=[
+  "# "+line(business.name||"Untitled business")+" — BizzIntel workbook",
+  "Business stage: "+line(business.stage),
+  "Industry: "+line(business.industry),
+  "Market: "+line(business.location),
+  "Goal: "+line(business.goal),
+  "",
+  "This workbook contains founder-entered results and draft educational tasks. Neither independent verification nor third-party eligibility is implied."
+ ];
+ for(const p of PLAYBOOKS){
+  sections.push("","## "+p.title,"");
+  for(let i=0;i<p.steps.length;i++){
+   const st=p.steps[i],completed=isStepDone(tasks,p,i);
+   const notes=getStepResponse(tasks,p,i);
+   const source=tasks["pb-source:"+p.id+":"+st.id]||"";
+   const next=tasks["pb-next:"+p.id+":"+st.id]||"";
+   sections.push("### "+(i+1)+". "+st.title+" — "+(completed?"Complete":"In progress"),
+   "**Objective:** "+st.output,
+   "**My work:**",String(notes||"Not recorded"),"");
+   if(source)sections.push("**Source/reference:** "+source,"");
+   if(next)sections.push("**Next action:** "+next,"");
+  }
+ }
+ return sections.join("\n");
+}
