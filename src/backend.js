@@ -42,6 +42,20 @@ export async function signIn(email,password){
  write({...s,expires_at:Date.now()+(Number(s.expires_in)||3600)*1000});
  return s.user;
 }
+export function consumeAuthRedirect(){
+ const raw=globalThis.location?.hash||"";
+ if(!raw.startsWith("#access_token="))return null;
+ const p=new URLSearchParams(raw.slice(1));
+ const access_token=p.get("access_token"),refresh_token=p.get("refresh_token"),type=p.get("type");
+ if(!access_token||!refresh_token)return null;
+ write({access_token,refresh_token,expires_at:Date.now()+(Number(p.get("expires_in"))||3600)*1000});
+ globalThis.history?.replaceState(null,"",location.pathname+location.search+"#/home");
+ return type;
+}
+export async function changePassword(password){
+ if(String(password||"").length<8)throw Error("Use at least 8 characters.");
+ return request("/auth/v1/user",{method:"PUT",body:{password}});
+}
 export async function resetPassword(email){
  return request("/auth/v1/recover",{auth:false,method:"POST",body:{email}});
 }
