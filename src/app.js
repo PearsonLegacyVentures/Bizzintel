@@ -111,7 +111,7 @@ function businessPage(b){
 function roadmapPage(b){
  const arr=getRoadmap(b);const custom=b.tasks?.__custom||[];const all=[...arr,...custom.map((t,i)=>({id:"custom-"+i,title:t,description:"Added by you.",tag:"Custom"}))];
  const done=all.filter(t=>b.tasks?.[t.id]).length;
- return header("Your roadmap, your pace.",'The tasks adapt to your current stage, sector and goal. Complete what matters; skip the theatre.','ADAPTIVE JOURNEY')+
+ return header("Your next actions, your pace.",'The tasks adapt to your current stage, sector and goal. Complete what matters; skip the theatre.','ADAPTIVE JOURNEY')+
  '<div class="progress-card"><div><strong>'+done+" of "+all.length+'</strong><span> tasks completed</span></div><div class="progress-track"><div style="width:'+Math.round(done/Math.max(1,all.length)*100)+'%"></div></div></div>'+
  '<div class="steps-list">'+all.map((t,i)=>'<div class="task-row"><button aria-label="'+(b.tasks?.[t.id]?'Mark incomplete: ':'Complete: ')+h(t.title)+'" class="task-check '+(b.tasks?.[t.id]?'checked':'')+'" data-task="'+h(t.id)+'">'+(b.tasks?.[t.id]?'✓':'')+'</button><div><span class="task-tag">'+h(t.tag)+'</span><h3 class="'+(b.tasks?.[t.id]?'finished':'')+'">'+h(t.title)+'</h3><p>'+h(t.description)+'</p></div></div>').join("")+'</div>'+
  box("Add a specific task",'<form id="custom-task-form" class="inline-form"><input required maxlength="160" aria-label="Custom task" name="task" placeholder="Something important for this business"><button class="button" type="submit">Add task</button></form>') ;
@@ -131,27 +131,40 @@ function playbooksPage(b){
  '<p class="footnote">BizzIntel provides structured lessons and templates, not an automated advisor. The module topics were requested by the founder. Detailed draft instructions need final founder review before public launch.</p>';
 }
 function lessonPage(b){
- const p=getPlaybook(state.playbookId)||PLAYBOOKS[0];
- const i=Math.max(0,Math.min(state.stepIndex,p.steps.length-1));state.stepIndex=i;
- const step=p.steps[i],progress=playbookProgress(b.tasks||{},p),noteKey="pb-note:"+p.id+":"+i;
- const saved=b.tasks?.[noteKey]||"";
- const examples=stepPrompt(p,step,b);
- return '<div class="lesson-top">'+btn("← All playbooks","nav-playbooks","button-ghost")+'<span class="task-tag">MODULE '+p.number+' · '+h(p.phase)+'</span></div>'+
- header(p.title,p.intro,"YOUR GUIDED WORKBOOK")+
- '<div class="progress-card"><div><strong>'+progress.complete+' / '+progress.total+'</strong><span> steps completed</span></div><div class="progress-track"><div style="width:'+progress.percent+'%"></div></div></div>'+
- '<div class="lesson-layout"><aside class="panel lesson-index"><h2>Module steps</h2><div class="lesson-step-list">'+p.steps.map((x,k)=>'<button type="button" data-open-step="'+k+'" class="lesson-link '+(i===k?'is-active':'')+'"><span class="lesson-no">'+(b.tasks?.[stepKey(p.id,k)]?'✓':String(k+1).padStart(2,"0"))+'</span><span>'+h(x.title)+'</span></button>').join("")+'</div></aside>'+
- '<section class="panel lesson-work"><span class="task-tag">STEP '+(i+1)+' OF '+p.steps.length+'</span><h2>'+h(step.title)+'</h2>'+
- '<div class="lesson-content-block"><h3>Why this matters</h3><p>'+h(step.why)+'</p></div>'+
- '<div class="lesson-content-block"><h3>What to do</h3><p>'+h(step.do)+'</p></div>'+
- '<div class="lesson-content-block"><h3>What you should finish with</h3><p>'+h(step.output)+'</p></div>'+
- '<div class="lesson-content-block"><h3>Optional copyable prompt</h3><p>Use this in ChatGPT or another writing tool if it helps. You can also complete the task without AI.</p>'+
- '<textarea class="lesson-prompt" readonly aria-label="Optional step prompt">'+h(examples)+'</textarea>'+
- '<div class="panel-actions">'+btn("Copy prompt","copy-prompt","button-outline button-small")+'</div></div>'+
- '<form id="lesson-form"><label class="field" for="step-notes"><span>Your work / notes for this step</span><textarea id="step-notes" name="notes" rows="7" placeholder="Write or paste your actual work here...">'+h(saved)+'</textarea>'+
- '<small>Save drafts even if the step is not finished. Progress is stored with this business when cloud saving is connected.</small></label>'+
- '<div class="lesson-action-row"><button class="button button-outline" type="submit" name="submitMode" value="save">Save my work</button><button class="button" type="submit" name="submitMode" value="complete">'+(b.tasks?.[stepKey(p.id,i)]?"Update and keep completed":"Save & mark complete")+' →</button></div></form>'+
- '<div class="lesson-pager">'+(i>0?'<button data-open-step="'+(i-1)+'">← Previous step</button>':'<span></span>')+
- (i<p.steps.length-1?'<button data-open-step="'+(i+1)+'">Next step →</button>':'<button data-go="playbooks">Back to guides →</button>')+'</div></section></div>';
+ const p=getPlaybook(state.playbookId)||PLAYBOOKS[0],i=Math.max(0,Math.min(state.stepIndex,p.steps.length-1));
+ state.stepIndex=i;
+ const st=p.steps[i],done=isStepDone(b.tasks||{},p,i),progress=playbookProgress(b.tasks||{},p);
+ const note=getStepResponse(b.tasks||{},p,i);
+ const source=b.tasks?.["pb-source:"+p.id+":"+st.id]||"";
+ const next=b.tasks?.["pb-next:"+p.id+":"+st.id]||"";
+ const references=(st.links||[]).filter(x=>/^https:\/\//.test(x.url));
+ return '<div class="lesson-top">'+btn("← All playbooks","nav-playbooks","button-ghost")+
+ '<span class="task-tag">MODULE '+p.number+' · '+h(p.phase)+'</span></div>'+
+ header(p.title,p.intro,"THE GUIDED WORKBOOK")+
+ '<div class="progress-card"><div><strong>'+progress.complete+' / '+progress.total+'</strong><span> steps complete</span></div><div class="progress-track" aria-label="'+progress.percent+'% complete"><div style="width:'+progress.percent+'%"></div></div></div>'+
+ '<div class="lesson-layout"><aside class="panel lesson-index"><h2>Inside this module</h2><div class="lesson-step-list">'+p.steps.map((step,k)=>
+ '<button type="button" data-open-step="'+k+'" class="lesson-link '+(i===k?'is-active':'')+'"><span class="lesson-no">'+(isStepDone(b.tasks||{},p,k)?'✓':String(k+1).padStart(2,"0"))+'</span><span>'+h(step.title)+'</span></button>'
+ ).join("")+'</div></aside><section class="panel lesson-work"><span class="task-tag">EXERCISE '+(i+1)+' OF '+p.steps.length+(done?' · COMPLETED':'')+'</span>'+
+ '<h2>'+h(st.title)+'</h2><p class="lesson-lead">'+h(st.why)+'</p>'+
+ '<div class="lesson-content-block"><h3>How to do it</h3><ol class="lesson-instructions">'+(st.how||[st.do]).map(x=>'<li>'+h(x)+'</li>').join("")+'</ol></div>'+
+ '<div class="lesson-example"><strong>ILLUSTRATIVE EXAMPLE</strong><p>'+h(st.example)+'</p></div>'+
+ '<div class="lesson-content-block"><h3>Your deliverable</h3><p>'+h(st.output)+'</p><p class="lesson-evidence">Evidence to capture: '+h(st.evidence)+'</p></div>'+
+ '<div class="lesson-warning"><strong>Common mistake</strong><p>'+h(st.avoid)+'</p></div>'+
+ (references.length?'<div class="lesson-content-block"><h3>Official resources</h3>'+references.map(x=>'<a class="resource-link" href="'+h(x.url)+'" target="_blank" rel="noopener noreferrer">'+h(x.title)+' ↗</a>').join("")+'</div>':'')+
+ '<form id="lesson-form" class="lesson-workbook"><span class="eyebrow">PUT IT INTO PRACTICE</span><h3>Record your work</h3>'+
+ '<label class="field" for="step-notes"><span>Your answer / work completed</span><textarea id="step-notes" name="notes" rows="7" placeholder="Write what you learned, decided or created...">'+h(note)+'</textarea></label>'+
+ '<label class="field" for="step-source"><span>Evidence, interview or source reference (optional)</span><input id="step-source" name="source" maxlength="500" value="'+h(source)+'" placeholder="URL, interview date, file reference"></label>'+
+ '<label class="field" for="step-next"><span>Next action (optional)</span><textarea id="step-next" name="next" rows="2" placeholder="What still needs to happen?">'+h(next)+'</textarea></label>'+
+ '<div class="lesson-action-row"><button class="button button-outline" type="submit" name="submitMode" value="save">Save draft</button>'+
+ '<button class="button" type="submit" name="submitMode" value="complete">'+(done?'Update completed exercise':'Save & complete exercise')+' →</button>'+
+ (done?btn("Reopen","lesson-uncomplete","button-ghost button-small"):"")+'</div>'+
+ '<p class="section-note">You can return and improve an answer later. A completed exercise needs actual written work or a reference.</p></form>'+
+ '<details class="prompt-drawer"><summary>Optional: copy a useful ChatGPT prompt <span>↗</span></summary>'+
+ '<p>Use only if it helps. You complete the exercise yourself; no AI account is connected to BizzIntel.</p>'+
+ '<textarea class="lesson-prompt" readonly aria-label="Optional step prompt">'+h(stepPrompt(p,st,b))+'</textarea>'+
+ '<div class="panel-actions">'+btn("Copy this prompt","copy-prompt","button-outline button-small")+'</div></details>'+
+ '<div class="lesson-pager">'+(i>0?'<button data-open-step="'+(i-1)+'">← Previous</button>':'<span></span>')+
+ (i<p.steps.length-1?'<button data-open-step="'+(i+1)+'">Next exercise →</button>':'<button data-go="playbooks">All modules →</button>')+'</div></section></div>';
 }
 function evidencePage(b){
  return header("Evidence, not guesses.",'Keep interviews, competitor research, decisions and risks in the business record. Cite source URLs when available.','RESEARCH & DECISIONS')+
@@ -293,7 +306,7 @@ document.addEventListener("click",async e=>{
   if(a==="lesson-uncomplete"){await loaded(async()=>{
     const b=active(),p=getPlaybook(state.playbookId);
     if(!p)return;
-    const tasks={...(b.tasks||{})}; delete tasks[stepKey(p.id,state.stepIndex)];
+    const tasks={...(b.tasks||{})}; delete tasks[stepKey(p.id,p.steps[state.stepIndex].id)];delete tasks["pb:"+p.id+":"+state.stepIndex];
     await saveChanges({tasks});toast("Step reopened.");
   })();return}
   if(a==="copy-prompt"){const p=getPlaybook(state.playbookId);if(!p)return;const text=stepPrompt(p,p.steps[state.stepIndex],active());try{await navigator.clipboard.writeText(text);toast("Prompt copied.");}catch{const area=document.querySelector(".lesson-prompt");area?.focus();area?.select();toast("Select and copy the highlighted prompt.");}return}
@@ -371,9 +384,11 @@ document.addEventListener("submit",async e=>{
   const b=active(),p=getPlaybook(state.playbookId),i=state.stepIndex;
   if(!p)throw Error("Guide not found.");
   const submit=e.submitter?.value||"save";
-  const key="pb-note:"+p.id+":"+i;
-  const tasks={...(b.tasks||{}),[key]:String(v.notes||"").slice(0,8000)};
-  if(submit==="complete")tasks[stepKey(p.id,i)]=true;
+  const step=p.steps[i],notes=String(v.notes||"").trim(),source=String(v.source||"").trim(),next=String(v.next||"").trim();
+  if(submit==="complete"&&notes.length<20&&source.length<12)throw Error("Record a meaningful result or supporting reference before completing this exercise.");
+  const tasks={...(b.tasks||{}),[responseKey(p.id,step.id)]:notes.slice(0,8000),
+    ["pb-source:"+p.id+":"+step.id]:source.slice(0,500),["pb-next:"+p.id+":"+step.id]:next.slice(0,1200)};
+  if(submit==="complete")tasks[stepKey(p.id,step.id)]=true;
   await saveChanges({tasks});
   toast(submit==="complete"?"Step marked complete.":"Your work is saved.");
  })();return}
