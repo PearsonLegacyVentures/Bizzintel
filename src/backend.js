@@ -89,7 +89,3 @@ export async function listArtifacts(businessId){return db("business_artifacts",{
 export async function addArtifact(payload){return (await db("business_artifacts",{method:"POST",body:payload,prefer:"return=representation"}))[0]}
 export async function saveArtifact(id,content,title){return db("business_artifacts",{method:"PATCH",query:q({id:"eq."+id}),body:{content,title,updated_at:new Date().toISOString()},prefer:"return=representation"})}
 export async function removeArtifact(id){return db("business_artifacts",{method:"DELETE",query:q({id:"eq."+id})})}
-export async function listMessages(businessId){return db("advisor_messages",{query:q({select:"*",business_id:"eq."+businessId,order:"created_at.asc",limit:"60"})})}
-export async function askAdvisor(businessId,intent,message){
- return request("/functions/v1/advisor",{method:"POST",body:{businessId,intent,message}});
-}
