@@ -1,15 +1,20 @@
-# BizzIntel guided-playbook acceptance checklist
+# SWAGv2 guided-workbook QA
 
-- Ten founder-requested topic modules exist with meaningful instructions and deliverables.
-- Users can choose business stage, industry and initial goal; no module is locked by stage.
-- Recommended module order changes with selected stage/goal.
-- Every lesson has what to do, why, expected output, optional prompt and a saved-work area.
-- Completion state uses a unique key per module and step, stored with the business.
-- User can save in-progress notes, mark steps complete and reopen steps.
-- Existing business profile, evidence, documents, financial worksheet and roadmap remain accessible.
-- No BizzIntel AI advisor, fake AI response or mandatory OpenAI API dependency.
-- Demo is clearly labeled unsaved; no login-free writes to a production database.
-- Browser HTML escapes learner input; CSS responds at mobile and desktop sizes.
-- Real Supabase Auth + RLS still require an isolated test after project provisioning.
-- GitHub CI, deployed Cloudflare domain, and actual cross-device persistence must be verified before launch.
-- Founder must approve wording and any instructional techniques not explicitly supplied.
+## Verified in source-level smoke tests
+- 10 course modules, 62 distinct practical exercises.
+- Core ideation and planning redesigned to match the founder-discussed progression.
+- Every lesson includes multi-step instructions, example, deliverable, mistake, evidence and optional copyable prompt.
+- Modules can be accessed without a fixed stage gate.
+- Workbook progress keyed by stable lesson ID, with legacy step-key compatibility.
+- Business-specific notes, references and next actions are stored with workbook tasks.
+- Markdown workbook export includes saved notes, sources and completion.
+- All main pages and interactive guide pages render in the JS smoke harness.
+- Source syntax tests and core finance test checks pass.
+
+## Still requiring external verification
+- Real-browser mobile/desktop screenshot audit, focus behavior and accessibility.
+- Cloud authentication and cross-account RLS checks.
+- Cloudflare Pages deployment, real domain, redirect rules and backend configuration.
+- Actual GitHub Action job completion.
+- Curriculum editorial approval, source freshness and real learner usability testing.
+- Scheduled grant checks, Meta publishing and automatic report delivery are not implemented.
