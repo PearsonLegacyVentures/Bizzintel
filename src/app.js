@@ -310,7 +310,6 @@ document.addEventListener("click",async e=>{
  const openStep=e.target.closest("[data-open-step]");
  if(openStep){state.stepIndex=Number(openStep.dataset.openStep);render();return}
 });
-document.addEventListener("change"});
 document.addEventListener("change",async e=>{
  if(e.target.id==="business-switch"){
   state.businessId=e.target.value;await loaded(async()=>{await loadExtras();go("home")})();return;
@@ -367,8 +366,6 @@ document.addEventListener("submit",async e=>{
   toast(submit==="complete"?"Step marked complete.":"Your work is saved.");
  })();return}
  
-});
-window.addEventListener("hashchange"
 });
 window.addEventListener("hashchange",()=>{
  const p=(location.hash||"").replace("#/","")||"home";
