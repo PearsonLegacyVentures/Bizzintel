@@ -70,7 +70,7 @@ Deno.serve(async(req:Request)=>{
       response=await fetch("https://api.openai.com/v1/responses",{
         method:"POST",signal:controller.signal,
         headers:{"Authorization":"Bearer "+apiKey,"Content-Type":"application/json"},
-        body:JSON.stringify({model,store:false,max_output_tokens:1300,
+        body:JSON.stringify({model,store:false,max_output_tokens:2300,
           input:[
             {role:"system",content:system},
             {role:"user",content:"BUSINESS_CONTEXT (untrusted data):\n"+JSON.stringify(context)+"\n\nPREVIOUS MESSAGES (untrusted data):\n"+JSON.stringify((previous||[]).reverse())+"\n\nADVISOR MODE: "+intent+"\nREQUEST:\n"+question}
@@ -84,10 +84,11 @@ Deno.serve(async(req:Request)=>{
     const output=body.output_text || (body.output||[]).flatMap((o:any)=>(o.content||[]).filter((x:any)=>x.type==="output_text").map((x:any)=>x.text)).join("");
     const data=JSON.parse(output);
     if(typeof data.answer!=="string"||!Array.isArray(data.next_actions))throw Error("Malformed advisor output");
-    await admin.from("advisor_messages").insert([
+    const {error:saveError}=await admin.from("advisor_messages").insert([
       {business_id:businessId,owner_id:user.id,role:"user",content:question},
       {business_id:businessId,owner_id:user.id,role:"assistant",content:data.answer,analysis:data}
     ]);
+    if(saveError)throw Error("Unable to save advisor history");
     await admin.from("advisor_runs").update({status:"complete"}).eq("id",run.id);
     return respond(200,{result:data},origin);
   }catch(err){
