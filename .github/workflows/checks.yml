@@ -1,0 +1,28 @@
+name: BizzIntel checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Static checks
+        run: npm run check
+      - name: Unit tests
+        run: npm test
+      - name: Static Cloudflare build
+        run: npm run build
+      - name: Verify build assets
+        run: |
+          test -f dist/index.html
+          test -f dist/src/app.js
+          test -f dist/styles.css
+          test -f dist/config.js
+          test -f dist/_headers
