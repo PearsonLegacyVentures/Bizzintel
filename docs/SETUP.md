@@ -9,9 +9,9 @@
 1. Create a NEW dedicated Supabase project called BizzIntel in the correct organization after reviewing any costs. Do not reuse Tranquilitas Dispatch or Uber Nassau.
 2. Run the reviewed migration in supabase/migrations on the new project. Confirm RLS and indexes.
 3. Configure Auth site URL and redirect allowlist for your actual preview and production domains. Turn on email verification for public sign-ups and rate limiting.
-4. Copy config.example.js to config.js and enter ONLY SUPABASE_URL and the publishable (or legacy anon) key. Because the browser imports config.js, never use a secret key.
+4. For local development, copy `config.example.js` to `config.js` and enter ONLY the project URL and publishable (or legacy anon) key. For Cloudflare Pages set `BIZZINTEL_SUPABASE_URL` and `BIZZINTEL_SUPABASE_PUBLISHABLE_KEY` as build environment variables; the build safely creates public `config.js`. Never use a service-role or OpenAI key in these variables.
 5. Deploy Edge Function advisor with JWT verification enabled. Secrets: OPENAI_API_KEY; optional OPENAI_MODEL; ALLOWED_ORIGINS as comma-separated exact https origins. Project SUPABASE_URL/ANON_KEY/SERVICE_ROLE_KEY are server-only.
-6. Test create / edit / delete as two separate real users, verify cross-user queries return no other user's records, confirm auth refresh and logout.
+6. Test create / edit / delete as two separate real users, verify cross-user queries return no other user's records, confirm auth refresh, email confirmation, password recovery and logout.
 7. Test the advisor, usage limit and that wrong-user business IDs are rejected. Review cost monitoring, rate limits and security advisors.
 8. Verify Cloudflare mobile/desktop and final domain CORS and Auth redirect settings, then authorize production deployment.
 
