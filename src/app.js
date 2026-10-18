@@ -3,7 +3,7 @@ import {STAGES,INDUSTRIES,GOALS,getRoadmap,getReadiness} from "./journeys.js";
 import {PLAYBOOKS,getPlaybook,stepKey,responseKey,getStepResponse,isStepDone,playbookProgress,orderedPlaybooks,stepPrompt,workbookMarkdown} from "./playbooks.js";
 import {esc as h,model,money,planMarkdown,freshBusiness,slug,download} from "./logic.js";
 
-const state={user:null,authMode:"login",businesses:[],businessId:null,notes:[],artifacts:[],messages:[],page:"home",demo:false,menu:false,playbookId:"ideation",stepIndex:0,working:false,ready:false};
+const state={user:null,authMode:"login",businesses:[],businessId:null,notes:[],artifacts:[],messages:[],page:"home",demo:false,menu:false,playbookId:"ideation",stepIndex:0,working:false,ready:false,localRecords:{},deviceSaved:false};
 const $=s=>document.querySelector(s);
 const active=()=>state.businesses.find(b=>b.id===state.businessId);
 const icon=(name)=>({arrow:"→",check:"✓",sparkle:"✳",menu:"☰",cross:"×",download:"↓",back:"←",more:"···"}[name]||"↗");
@@ -36,7 +36,7 @@ function navigation(){
 }
 function outer(body){
  return topbar()+'<div class="shell">'+navigation()+'<main class="content" id="main">'+
- (state.demo?'<div class="demo-banner"><strong>Preview mode.</strong> Progress is not saved in preview mode. Export your work before leaving. Cloud saving needs an account. '+btn("Exit demo","exitdemo","button-small")+'</div>':'')+
+ (state.demo?'<div class="demo-banner"><strong>Browser-only workspace.</strong> '+(state.deviceSaved?"Progress saves on this device.":"Storage is unavailable; export before leaving.")+' Not private or synced across devices; never store passwords or confidential records here. '+btn("Export workbook","export-workbook","button-outline button-small")+btn("Clear browser data","exitdemo","button-ghost button-small")+'</div>':'')+
  body+'</main></div>';
 }
 function welcome(){
@@ -57,12 +57,40 @@ function welcome(){
  '<button data-action="demo" class="button button-wide">Explore the demo →</button>')+
  '</div></main>';
 }
+const LOCAL_KEY="bizzintel:browser-workspace:v1";
+function saveLocal(){
+ if(!state.demo)return;
+ state.localRecords[state.businessId]={notes:state.notes,artifacts:state.artifacts};
+ try{
+  localStorage.setItem(LOCAL_KEY,JSON.stringify({businesses:state.businesses,businessId:state.businessId,records:state.localRecords,updatedAt:Date.now()}));
+  state.deviceSaved=true;
+ }catch{state.deviceSaved=false}
+}
+function restoreLocal(){
+ try{
+  const raw=localStorage.getItem(LOCAL_KEY);
+  if(!raw)return false;
+  const saved=JSON.parse(raw);
+  if(!Array.isArray(saved.businesses)||saved.businesses.length===0)return false;
+  state.businesses=saved.businesses.filter(b=>b&&typeof b.name==="string"&&typeof b.id==="string");
+  if(!state.businesses.length)return false;
+  state.localRecords=saved.records&&typeof saved.records==="object"?saved.records:{};
+  state.businessId=state.businesses.some(b=>b.id===saved.businessId)?saved.businessId:state.businesses[0].id;
+  const entries=state.localRecords[state.businessId]||{};
+  state.notes=entries.notes||[];state.artifacts=entries.artifacts||[];state.messages=[];
+  state.deviceSaved=true;
+  return true;
+ }catch{return false}
+}
 function demoSetup(){
  state.demo=true;state.user=null;
+ if(restoreLocal()){go("home");return}
  const id=crypto.randomUUID();
  const b={...freshBusiness("demo",{name:"Island Example Co.",stage:"operating",industry:"service",location:"Nassau, The Bahamas",goal:"customers"}),id,
-   summary:"An illustrative mobile service business.",customer:"Customers in Nassau seeking reliable on-location service.",problem:"Convenient service can be difficult to book.",solution:"A clear, bookable service with reliable arrival windows.",evidence:"",updated_at:new Date().toISOString()};
- state.businesses=[b];state.businessId=id;state.notes=[];state.artifacts=[];state.messages=[];go("home");
+  summary:"An illustrative mobile service business.",customer:"Customers in Nassau seeking reliable on-location service.",
+  problem:"Convenient service can be difficult to book.",solution:"A clear, bookable service with reliable arrival windows.",evidence:"",updated_at:new Date().toISOString()};
+ state.businesses=[b];state.businessId=id;state.notes=[];state.artifacts=[];state.messages=[];state.localRecords={};
+ saveLocal();go("home");
 }
 function stepTag(value){return (STAGES.find(s=>s.id===value)||STAGES[0]).short}
 function stat(label,value,description){return '<div class="kpi"><span>'+h(label)+'</span><strong>'+h(value)+'</strong><small>'+h(description)+'</small></div>'}
@@ -232,7 +260,7 @@ function render(){
 async function loadExtras(){
  const b=active();
  if(!b){state.notes=[];state.artifacts=[];state.messages=[];return}
- if(state.demo){return}
+ if(state.demo){const data=state.localRecords[b.id]||{};state.notes=data.notes||[];state.artifacts=data.artifacts||[];state.messages=[];return}
  const [notes,artifacts]=await Promise.all([api.listNotes(b.id),api.listArtifacts(b.id)]);
  state.notes=notes;state.artifacts=artifacts;state.messages=[];
 }
@@ -249,7 +277,7 @@ async function start(){
 async function saveChanges(payload){
  const b=active();if(!b)throw Error("No business selected");
  const updated={...payload,updated_at:new Date().toISOString()};
- if(state.demo){Object.assign(b,updated);render();return}
+ if(state.demo){Object.assign(b,updated);saveLocal();render();return}
  const fresh=await api.saveBusiness(b.id,updated);
  state.businesses=state.businesses.map(i=>i.id===b.id?fresh:i);render();
 }
@@ -261,14 +289,14 @@ async function createBusiness(v){
  let b;
  if(state.demo)b={...values,id:crypto.randomUUID(),updated_at:new Date().toISOString()};
  else b=await api.addBusiness(values);
- state.businesses.unshift(b);state.businessId=b.id;state.notes=[];state.artifacts=[];state.messages=[];go("playbooks");toast("Business workspace created.");
+ if(state.demo)saveLocal();state.businesses.unshift(b);state.businessId=b.id;state.notes=[];state.artifacts=[];state.messages=[];if(state.demo)saveLocal();go("playbooks");toast("Business workspace created.");
 }
 async function persistNotes(payload){
- if(state.demo)state.notes.unshift({...payload,id:crypto.randomUUID(),created_at:new Date().toISOString()});
+ if(state.demo){state.notes.unshift({...payload,id:crypto.randomUUID(),created_at:new Date().toISOString()});saveLocal();}
  else state.notes.unshift(await api.addNote(payload));
 }
 async function persistArtifact(payload){
- if(state.demo)state.artifacts.unshift({...payload,id:crypto.randomUUID(),created_at:new Date().toISOString(),updated_at:new Date().toISOString()});
+ if(state.demo){state.artifacts.unshift({...payload,id:crypto.randomUUID(),created_at:new Date().toISOString(),updated_at:new Date().toISOString()});saveLocal();}
  else state.artifacts.unshift(await api.addArtifact(payload));
 }
 async function createDocument(kind){
@@ -298,7 +326,7 @@ document.addEventListener("click",async e=>{
   if(a==="demo"){demoSetup();return}
   if(a==="show-info"){toast("Explore the working demo while cloud setup is pending.");return}
   if(a.startsWith("show-")){state.authMode=a.slice(5);render();return}
-  if(a==="exitdemo"){state.demo=false;state.businesses=[];state.businessId=null;go("home");return}
+  if(a==="exitdemo"){if(!confirm("Permanently clear this browser-only preview and its business work? Export a copy first."))return;try{localStorage.removeItem(LOCAL_KEY)}catch{}state.demo=false;state.localRecords={};state.businesses=[];state.businessId=null;state.notes=[];state.artifacts=[];go("home");return}
   if(a==="signout"){await loaded(async()=>{await api.signOut();state.user=null;state.businesses=[];state.businessId=null;go("home")})();return}
   if(a==="create"){go("new");return}
   if(a==="export-workbook"){exportWorkbook();return}
@@ -317,15 +345,15 @@ document.addEventListener("click",async e=>{
   if(a==="download-current"){const art=state.artifacts.find(x=>x.id===state.editId);if(art)download(slug(art.title)+".md",art.content,"text/markdown");return}
   if(a==="delete-current"){
    if(!confirm("Permanently delete this document?"))return;
-   await loaded(async()=>{if(!state.demo)await api.removeArtifact(state.editId);state.artifacts=state.artifacts.filter(x=>x.id!==state.editId);go("documents");toast("Document deleted.")})();return
+   await loaded(async()=>{if(!state.demo)await api.removeArtifact(state.editId);state.artifacts=state.artifacts.filter(x=>x.id!==state.editId);if(state.demo)saveLocal();go("documents");toast("Document deleted.")})();return
   }
   if(a==="delete-business"){
    if(!confirm("Permanently delete this business, its completed lessons, notes and documents?"))return;
-   await loaded(async()=>{const id=state.businessId;if(!state.demo)await api.removeBusiness(id);state.businesses=state.businesses.filter(x=>x.id!==id);state.businessId=state.businesses[0]?.id||null;await loadExtras();go("home");toast("Business removed.")})();return;
+   await loaded(async()=>{const id=state.businessId;if(!state.demo)await api.removeBusiness(id);if(state.demo)saveLocal();state.businesses=state.businesses.filter(x=>x.id!==id);delete state.localRecords[id];state.businessId=state.businesses[0]?.id||null;await loadExtras();if(state.demo)saveLocal();go("home");toast("Business removed.")})();return;
   }
  }
  const note=e.target.closest("[data-remove-note]");
- if(note){if(!confirm("Delete this research note?"))return;await loaded(async()=>{if(!state.demo)await api.removeNote(note.dataset.removeNote);state.notes=state.notes.filter(n=>n.id!==note.dataset.removeNote);toast("Note deleted.")})();return}
+ if(note){if(!confirm("Delete this research note?"))return;await loaded(async()=>{if(!state.demo)await api.removeNote(note.dataset.removeNote);state.notes=state.notes.filter(n=>n.id!==note.dataset.removeNote);if(state.demo)saveLocal();toast("Note deleted.")})();return}
  const doc=e.target.closest("[data-open-artifact]");
  if(doc){state.editId=doc.dataset.openArtifact;go("editdoc");return}
  const save=e.target.closest("[data-download-artifact]");
@@ -337,7 +365,7 @@ document.addEventListener("click",async e=>{
 });
 document.addEventListener("change",async e=>{
  if(e.target.id==="business-switch"){
-  state.businessId=e.target.value;await loaded(async()=>{await loadExtras();go("home")})();return;
+  if(state.demo)saveLocal();state.businessId=e.target.value;await loaded(async()=>{await loadExtras();if(state.demo)saveLocal();go("home")})();return;
  }
 
 });
@@ -376,7 +404,7 @@ document.addEventListener("submit",async e=>{
  })();return}
  if(f.id==="artifact-form"){await loaded(async()=>{
   const id=v.id,item=state.artifacts.find(x=>x.id===id);if(!item)throw Error("Document not found.");
-  if(state.demo){item.title=v.title;item.content=v.content;item.updated_at=new Date().toISOString();}
+  if(state.demo){item.title=v.title;item.content=v.content;item.updated_at=new Date().toISOString();saveLocal();}
   else{const rows=await api.saveArtifact(id,v.content,v.title);Object.assign(item,rows[0]||{});}
   toast("Document saved.");
  })();return}
