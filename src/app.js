@@ -1,8 +1,9 @@
 import * as api from "./backend.js";
-import {STAGES,INDUSTRIES,GOALS,ADVISOR_MODES,getRoadmap,getReadiness,getSuggestedQuestion} from "./journeys.js";
+import {STAGES,INDUSTRIES,GOALS,getRoadmap,getReadiness} from "./journeys.js";
+import {PLAYBOOKS,getPlaybook,stepKey,playbookProgress,orderedPlaybooks,stepPrompt} from "./playbooks.js";
 import {esc as h,model,money,planMarkdown,freshBusiness,slug,download} from "./logic.js";
 
-const state={user:null,authMode:"login",businesses:[],businessId:null,notes:[],artifacts:[],messages:[],page:"home",demo:false,menu:false,mode:"assessment",working:false,ready:false};
+const state={user:null,authMode:"login",businesses:[],businessId:null,notes:[],artifacts:[],messages:[],page:"home",demo:false,menu:false,playbookId:"ideation",stepIndex:0,working:false,ready:false};
 const $=s=>document.querySelector(s);
 const active=()=>state.businesses.find(b=>b.id===state.businessId);
 const icon=(name)=>({arrow:"→",check:"✓",sparkle:"✳",menu:"☰",cross:"×",download:"↓",back:"←",more:"···"}[name]||"↗");
@@ -26,7 +27,7 @@ function topbar(){
  (state.user?btn("Sign out","signout","button-ghost button-small"):'')+'</div></header>';
 }
 function navigation(){
- const items=[["home","Overview","◫"],["business","Business profile","◎"],["journey","Your roadmap","◇"],["advisor","AI advisor","✳"],["evidence","Evidence vault","▤"],["documents","Documents","▣"],["financials","Financials","◈"],["toolkit","Launch toolkit","▦"],["settings","Settings","⚙"]];
+ const items=[["home","Overview","◫"],["business","Business profile","◎"],["journey","Your roadmap","◇"],["playbooks","Step-by-step guides","▤"],["evidence","Evidence vault","▤"],["documents","Documents","▣"],["financials","Financials","◈"],["toolkit","Launch toolkit","▦"],["settings","Settings","⚙"]];
  return '<aside class="sidebar '+(state.menu?'open':'')+'"><div class="sidebar-title">WORKSPACE</div>'+
  '<div class="business-picker"><label for="business-switch">SELECT A BUSINESS</label><select id="business-switch">'+state.businesses.map(b=>'<option value="'+h(b.id)+'" '+(b.id===state.businessId?'selected':'')+'>'+h(b.name)+'</option>').join("")+'</select>'+
  '<button class="subtle-add" data-action="create" type="button">＋ Add a business</button></div>'+
@@ -35,13 +36,13 @@ function navigation(){
 }
 function outer(body){
  return topbar()+'<div class="shell">'+navigation()+'<main class="content" id="main">'+
- (state.demo?'<div class="demo-banner"><strong>Preview mode.</strong> Work is not saved or shared across devices. Connect the backend for real accounts and AI. '+btn("Exit demo","exitdemo","button-small")+'</div>':'')+
+ (state.demo?'<div class="demo-banner"><strong>Preview mode.</strong> Work is not saved or shared across devices. Connect the backend for secure account saving. '+btn("Exit demo","exitdemo","button-small")+'</div>':'')+
  body+'</main></div>';
 }
 function welcome(){
  return topbar()+'<main class="welcome"><div class="welcome-content">'+label("THE BUSINESS-BUILDING WORKSPACE")+
  '<h1>Every business starts somewhere. <em>Make the next move count.</em></h1>'+
- '<p class="lead">From a first idea to a growing operation, BizzIntel gives you one place to plan, challenge assumptions, organize the work and get evidence-based AI guidance.</p>'+
+ '<p class="lead">From a first idea to a growing operation, BizzIntel gives you one place to plan, challenge assumptions, organize the work and follow clear steps with practical templates and prompts.</p>'+
  '<div class="welcome-actions">'+btn("Explore the demo","demo")+(api.configured?btn("Create your account","show-signup","button-outline"):btn("See what is coming","show-info","button-outline"))+'</div>'+
  '<div class="stat-strip"><div><strong>06</strong><span>Business stages</span></div><div><strong>07</strong><span>Industry journeys</span></div><div><strong>01</strong><span>Clear next move</span></div></div></div>'+
  '<div class="auth-card"><div class="card-overline">FOUNDER ACCESS</div>'+
@@ -52,7 +53,7 @@ function welcome(){
  '<button class="button button-wide" type="submit">'+(state.authMode==="signup"?"Create account":state.authMode==="reset"?"Send recovery email":"Sign in")+' →</button></form>'+
  '<div class="auth-links"><button data-action="show-login">Sign in</button><button data-action="show-signup">Create account</button><button data-action="show-reset">Forgot password?</button></div>':
  '<h2>Cloud access is not configured yet.</h2><p>The preview is functional without an account. Secure cloud storage and live AI require a dedicated Supabase project.</p><div class="divider"></div>'+
- '<div class="info-list"><span>✓ Stage-specific journeys</span><span>✓ Multi-business workspace</span><span>✓ Real AI endpoint prepared</span></div>'+
+ '<div class="info-list"><span>✓ Stage-specific journeys</span><span>✓ Multi-business workspace</span><span>✓ Guided founder playbooks</span></div>'+
  '<button data-action="demo" class="button button-wide">Explore the demo →</button>')+
  '</div></main>';
 }
@@ -70,7 +71,7 @@ function overview(b){
  const next=tasks.filter(t=>!b.tasks?.[t.id]).slice(0,3);
  return header('The next move starts here.','One place to understand the business, make progress and keep decisions grounded.','YOUR COMMAND CENTER')+
  '<div class="hero-panel"><div>'+label("CURRENT BUSINESS")+'<h2>'+h(b.name)+'</h2><p>'+h(b.summary||"Build the basics. Test the assumptions. Then move.")+'</p><div class="hero-tags"><span>'+h(stepTag(b.stage))+'</span><span>'+h(INDUSTRIES.find(i=>i.id===b.industry)?.name||"Other")+'</span><span>'+h(b.location)+'</span></div></div>'+
- '<div class="hero-cta">'+btn("Open business advisor","nav-advisor")+'</div></div>'+
+ '<div class="hero-cta">'+btn("Explore step-by-step guides","nav-playbooks")+'</div></div>'+
  '<div class="kpi-grid">'+stat("Roadmap",done+" / "+tasks.length,"Tasks completed")+stat("Business context",readiness.completed+" / 4","Foundational inputs recorded")+stat("Current focus",GOALS.find(g=>g.id===b.goal)?.name||"Validation","User-selected priority")+'</div>'+
  '<div class="two-col">'+box("Your next three moves",'<p class="section-note">A starting point based on your stage, industry and goal.</p>'+
  (next.length?next.map((t,i)=>'<div class="next-step"><span class="step-number">0'+(i+1)+'</span><div><strong>'+h(t.title)+'</strong><p>'+h(t.description)+'</p></div></div>').join(""):empty("Roadmap up to date","Review your results and choose the next business milestone."))+
@@ -79,7 +80,7 @@ function overview(b){
  '<div class="section-heading"><div>'+label("ALL YOUR TOOLS")+'<h2>Build, test, improve.</h2></div></div>'+tiles();
 }
 function tiles(){
- const items=[["journey","Adaptive roadmap","One practical task at a time.","◇"],["advisor","AI business advisor","Challenge assumptions and plan next steps.","✳"],["business","Business memory","Context stays attached to each venture.","◎"],["evidence","Evidence vault","Store real research and decisions.","▤"],["documents","Working documents","Create, edit and export deliverables.","▣"],["financials","Financial model","Test unit economics with real inputs.","◈"],["toolkit","Launch toolkit","Marketing, pitch, GBP and funding prompts.","▦"]];
+ const items=[["journey","Adaptive roadmap","One practical task at a time.","◇"],["playbooks","Step-by-step guides","Follow the modules in your own order.","✳"],["business","Business memory","Context stays attached to each venture.","◎"],["evidence","Evidence vault","Store real research and decisions.","▤"],["documents","Working documents","Create, edit and export deliverables.","▣"],["financials","Financial model","Test unit economics with real inputs.","◈"],["toolkit","Launch toolkit","Marketing, pitch, GBP and funding prompts.","▦"]];
  return '<div class="tool-grid">'+items.map(i=>'<button class="tool-card" data-go="'+i[0]+'"><div class="tool-glyph">'+i[3]+'</div><h3>'+i[1]+'</h3><p>'+i[2]+'</p><span class="tool-arrow">↗</span></button>').join("")+'</div>';
 }
 function newBusiness(){
@@ -90,7 +91,7 @@ function newBusiness(){
  '</div><div class="panel-actions"><button class="button" type="submit">Create workspace →</button>'+btn("Cancel","nav-home","button-outline")+'</div></form>')+'</div>';
 }
 function businessPage(b){
- return header("Know your business.",'These facts guide the advisor and every recommended action. Record what you know; mark assumptions clearly.','BUSINESS MEMORY')+
+ return header("Know your business.",'These facts help you complete the worksheets and build your documents. Only record information you can support.','BUSINESS MEMORY')+
  box("Business fundamentals",'<form id="business-form"><div class="form-grid">'+
  field("name","Business name",b.name)+pick("stage","Current stage",STAGES,b.stage)+pick("industry","Industry",INDUSTRIES,b.industry)+
  field("location","Market / location",b.location)+pick("goal","Immediate business goal",GOALS,b.goal)+
@@ -100,38 +101,52 @@ function businessPage(b){
  field("solution","What will you deliver?",b.solution,"textarea")+
  field("evidence","What evidence do you actually have?",b.evidence,"textarea","Only record interviews, paid sales, pilots, observations or traceable sources. Do not invent results.")+
  '</div><div class="panel-actions"><button class="button" type="submit">Save business memory →</button>'+btn("Export profile","export-profile","button-outline")+'</div></form>')+
- '<p class="footnote">The advisor receives this information as business context. Unverified statements are not treated as proven.</p>';
+ '<p class="footnote">Your business profile feeds into reusable worksheets and optional copyable prompts. Unverified statements should be checked before external use.</p>';
 }
 function roadmapPage(b){
- const arr=getRoadmap(b);const custom=b.tasks?.__custom||[];const all=[...arr,...custom.map((t,i)=>({id:"custom-"+i,title:t,description:"Saved from your advisor or added manually.",tag:"Custom"}))];
+ const arr=getRoadmap(b);const custom=b.tasks?.__custom||[];const all=[...arr,...custom.map((t,i)=>({id:"custom-"+i,title:t,description:"Added by you.",tag:"Custom"}))];
  const done=all.filter(t=>b.tasks?.[t.id]).length;
  return header("Your roadmap, your pace.",'The tasks adapt to your current stage, sector and goal. Complete what matters; skip the theatre.','ADAPTIVE JOURNEY')+
  '<div class="progress-card"><div><strong>'+done+" of "+all.length+'</strong><span> tasks completed</span></div><div class="progress-track"><div style="width:'+Math.round(done/Math.max(1,all.length)*100)+'%"></div></div></div>'+
  '<div class="steps-list">'+all.map((t,i)=>'<div class="task-row"><button aria-label="'+(b.tasks?.[t.id]?'Mark incomplete: ':'Complete: ')+h(t.title)+'" class="task-check '+(b.tasks?.[t.id]?'checked':'')+'" data-task="'+h(t.id)+'">'+(b.tasks?.[t.id]?'✓':'')+'</button><div><span class="task-tag">'+h(t.tag)+'</span><h3 class="'+(b.tasks?.[t.id]?'finished':'')+'">'+h(t.title)+'</h3><p>'+h(t.description)+'</p></div></div>').join("")+'</div>'+
  box("Add a specific task",'<form id="custom-task-form" class="inline-form"><input required maxlength="160" aria-label="Custom task" name="task" placeholder="Something important for this business"><button class="button" type="submit">Add task</button></form>') ;
 }
-function advisorPage(b){
- const modes=ADVISOR_MODES.map(m=>'<option value="'+h(m.id)+'" '+(m.id===state.mode?'selected':'')+'>'+h(m.name)+'</option>').join("");
- return header("An advisor that challenges you.",'AI should question the idea, expose blind spots and recommend evidence-based action—not manufacture confidence.','BUSINESS ADVISOR')+
- '<div class="advisor-layout"><section class="panel advice-main"><div class="chat-context"><span class="pulse"></span> CONTEXT: '+h(b.name)+' · '+h(stepTag(b.stage))+' · '+h(b.industry)+'</div>'+
- (state.messages.length?'<div class="chat-history">'+state.messages.map((m,i)=>'<div class="chat-message '+(m.role==="user"?"from-user":"from-advisor")+'"><span class="message-label">'+(m.role==="user"?"YOU":"BIZZINTEL ADVISOR")+'</span><div class="chat-copy">'+h(m.content)+'</div>'+
- (m.role==="assistant"&&m.analysis?analysisPanel(m.analysis,i):'')+'</div>').join("")+'</div>':
- '<div class="advisor-intro"><div class="advisor-icon">✳</div><h2>What are we solving today?</h2><p>Select a mode, then ask something useful. Advice will distinguish business facts, assumptions and missing evidence.</p></div>')+
- '<form id="advisor-form"><div class="advisor-compose"><div class="compose-top"><label for="advisor-mode">Advisor mode</label><select id="advisor-mode" name="intent">'+modes+'</select></div>'+
- '<textarea name="message" id="advisor-message" minlength="3" maxlength="2500" rows="4" required placeholder="Ask about a pricing decision, market test, operations issue or business risk...">'+h(getSuggestedQuestion(b,state.mode))+'</textarea>'+
- '<div class="compose-bottom"><span>Grounded in your saved business profile.</span><button class="button" type="submit" '+(state.working||state.demo?'disabled':'')+'>'+(state.working?'Analyzing…':'Get analysis →')+'</button></div></div></form>'+
- (state.demo?'<div class="notice-warning">AI is disabled in preview mode. The real endpoint requires a connected Supabase project and server-side OpenAI key. No simulated answers are shown.</div>':'')+
- '</section><aside class="advisor-side">'+box("How the advisor works",'<div class="numbered"><p><b>01</b> Reads your saved business facts</p><p><b>02</b> Challenges unproven assumptions</p><p><b>03</b> Suggests up to three next actions</p><p><b>04</b> Saves responses to your workspace</p></div>')+
- box("Data discipline",'<p class="section-note">Advice is based on your supplied business records, not live independent research. Current grants, market sizes and legal requirements are never represented as verified without sources.</p>')+'</aside></div>';
+function playbooksPage(b){
+ const packs=orderedPlaybooks(b);
+ const finished=PLAYBOOKS.reduce((sum,p)=>sum+playbookProgress(b.tasks||{},p).complete,0);
+ const total=PLAYBOOKS.reduce((sum,p)=>sum+p.steps.length,0);
+ return header("Learn the process. Do the work.","Choose the part of business you need, then complete each step. You are never locked into a particular order.","GUIDED BUSINESS PLAYBOOKS")+
+ '<div class="hero-panel"><div>'+label("YOUR PLAYBOOK PROGRESS")+'<h2>'+finished+' of '+total+' steps complete</h2><p>Follow structured guides, save your work at every step, and export templates. Lessons are editorial drafts awaiting founder review.</p></div><div class="hero-cta">'+btn("Open recommended guide","open-recommended")+'</div></div>'+
+ '<div class="toolkit-grid">'+packs.map(p=>{
+   const count=playbookProgress(b.tasks||{},p);
+   return '<article class="panel toolkit-card"><span class="task-tag">MODULE '+p.number+' · '+h(p.phase)+'</span><h3>'+h(p.title)+'</h3><p>'+h(p.subtitle)+'</p>'+
+    '<p class="playbook-stage">'+h(p.stages.map(id=>STAGES.find(x=>x.id===id)?.short||id).join(' · '))+'</p>'+
+    '<div class="playbook-meter"><span style="width:'+count.percent+'%"></span></div><div class="playbook-card-bottom"><small>'+count.complete+' / '+count.total+' steps</small><button data-open-playbook="'+h(p.id)+'">Open guide →</button></div></article>';
+ }).join("")+'</div>'+
+ '<p class="footnote">BizzIntel provides structured lessons and templates, not an automated advisor. Some instructional copy is draft content awaiting final review of Amar Pearson’s methods.</p>';
 }
-function analysisPanel(a,index){
- const actions=(a.next_actions||[]).slice(0,3).map((v,i)=>'<div class="analysis-action"><p><strong>'+h(v.title)+'</strong><br>'+h(v.why)+'</p><button type="button" data-add-advice="'+index+':'+i+'">Add to roadmap</button></div>').join("");
- const list=(values)=>'<ul>'+values.map(v=>'<li>'+h(v)+'</li>').join("")+'</ul>';
- return '<div class="analysis-detail">'+(a.known_facts?.length?'<h4>Recorded facts</h4>'+list(a.known_facts):'')+
- (a.assumptions?.length?'<h4>Assumptions / gaps</h4>'+list(a.assumptions):'')+
- (actions?'<h4>Recommended next moves</h4>'+actions:'')+
- (a.questions?.length?'<h4>Questions to resolve</h4>'+list(a.questions):'')+
- '<span class="confidence">Confidence: '+h(a.confidence||"unknown")+' — based on available context</span></div>';
+function lessonPage(b){
+ const p=getPlaybook(state.playbookId)||PLAYBOOKS[0];
+ const i=Math.max(0,Math.min(state.stepIndex,p.steps.length-1));state.stepIndex=i;
+ const step=p.steps[i],progress=playbookProgress(b.tasks||{},p),noteKey="pb-note:"+p.id+":"+i;
+ const saved=b.tasks?.[noteKey]||"";
+ const examples=stepPrompt(p,step,b);
+ return '<div class="lesson-top">'+btn("← All playbooks","nav-playbooks","button-ghost")+'<span class="task-tag">MODULE '+p.number+' · '+h(p.phase)+'</span></div>'+
+ header(p.title,p.intro,"YOUR GUIDED WORKBOOK")+
+ '<div class="progress-card"><div><strong>'+progress.complete+' / '+progress.total+'</strong><span> steps completed</span></div><div class="progress-track"><div style="width:'+progress.percent+'%"></div></div></div>'+
+ '<div class="lesson-layout"><aside class="panel lesson-index"><h2>Module steps</h2><div class="lesson-step-list">'+p.steps.map((x,k)=>'<button type="button" data-open-step="'+k+'" class="lesson-link '+(i===k?'is-active':'')+'"><span class="lesson-no">'+(b.tasks?.[stepKey(p.id,k)]?'✓':String(k+1).padStart(2,"0"))+'</span><span>'+h(x.title)+'</span></button>').join("")+'</div></aside>'+
+ '<section class="panel lesson-work"><span class="task-tag">STEP '+(i+1)+' OF '+p.steps.length+'</span><h2>'+h(step.title)+'</h2>'+
+ '<div class="lesson-content-block"><h3>Why this matters</h3><p>'+h(step.why)+'</p></div>'+
+ '<div class="lesson-content-block"><h3>What to do</h3><p>'+h(step.do)+'</p></div>'+
+ '<div class="lesson-content-block"><h3>What you should finish with</h3><p>'+h(step.output)+'</p></div>'+
+ '<div class="lesson-content-block"><h3>Optional copyable prompt</h3><p>Use this in ChatGPT or another writing tool if it helps. You can also complete the task without AI.</p>'+
+ '<textarea class="lesson-prompt" readonly aria-label="Optional step prompt">'+h(examples)+'</textarea>'+
+ '<div class="panel-actions">'+btn("Copy prompt","copy-prompt","button-outline button-small")+'</div></div>'+
+ '<form id="lesson-form"><label class="field" for="step-notes"><span>Your work / notes for this step</span><textarea id="step-notes" name="notes" rows="7" placeholder="Write or paste your actual work here...">'+h(saved)+'</textarea>'+
+ '<small>Save drafts even if the step is not finished. Progress is stored with this business when cloud saving is connected.</small></label>'+
+ '<div class="lesson-action-row"><button class="button button-outline" type="submit" name="submitMode" value="save">Save my work</button><button class="button" type="submit" name="submitMode" value="complete">'+(b.tasks?.[stepKey(p.id,i)]?"Update and keep completed":"Save & mark complete")+' →</button></div></form>'+
+ '<div class="lesson-pager">'+(i>0?'<button data-open-step="'+(i-1)+'">← Previous step</button>':'<span></span>')+
+ (i<p.steps.length-1?'<button data-open-step="'+(i+1)+'">Next step →</button>':'<button data-go="playbooks">Back to guides →</button>')+'</div></section></div>';
 }
 function evidencePage(b){
  return header("Evidence, not guesses.",'Keep interviews, competitor research, decisions and risks in the business record. Cite source URLs when available.','RESEARCH & DECISIONS')+
@@ -167,25 +182,13 @@ function financialPage(b){
  box("Financial results",'<div class="result-list"><div>Revenue <strong>'+money(m.revenue)+'</strong></div><div>Variable contribution per sale <strong>'+money(m.contribution)+'</strong></div><div>Monthly modeled profit / loss <strong class="'+(m.profit<0?"negative":"")+'">'+money(m.profit)+'</strong></div><div>Break-even monthly sales <strong>'+(m.breakEven??"Not achievable at this price")+'</strong></div></div>'+
  '<p class="section-note">A simple pre-tax model, not a financial statement. Real taxes, debt, capacity, returns and other costs may change the result.</p>')+'</div>';
 }
-function toolkitPage(b){
- const packs=[
- ["Marketing test","Create a 14-day campaign around one customer segment, one offer and a clear measurable conversion target. Do not invent testimonials, results or budgets."],
- ["Digital profile setup","Recommend suitable Facebook, Instagram, LinkedIn and WhatsApp Business profiles; draft bios using actual offers and verified contact details only."],
- ["Google Business Profile","First check eligibility, including in-person customer contact. Guide real categories, service areas, verification and compliant updates. Never suggest fake addresses or reviews."],
- ["Pitch deck","Outline 10 slides covering the opportunity, problem, solution, business model, competition, real evidence, projections, team and a specific ask. Flag missing proof."],
- ["Grant readiness","List the registration, evidence, financial and application materials needed; do not call any grant currently open without checking the issuing authority."],
- ["AI automation audit","Identify repetitive work, its estimated frequency, the simplest viable workflow, fallback, human approval and error handling."],
- ["Operating checklist","Create standard procedures for delivery quality, lead handling, billing, reporting, customer care and exceptions."]
- ];
- return header("Practical starter kits.",'Use business-specific prompts to create working deliverables in the advisor. Never confuse a prompt with a live integration.','BUSINESS TOOLS')+
- '<div class="toolkit-grid">'+packs.map((p,i)=>'<div class="panel toolkit-card"><span class="task-tag">PLAYBOOK 0'+(i+1)+'</span><h3>'+h(p[0])+'</h3><p>'+h(p[1])+'</p><button data-toolkit="'+i+'">Use with my business →</button></div>').join("")+'</div>';
-}
+function toolkitPage(b){return playbooksPage(b)}
 function settingsPage(b){
  return header("Workspace controls.",'Export your records or permanently remove a business. Data security starts with ownership.','SETTINGS')+
  box("Your workspace",'<div class="setting-row"><div><strong>Access mode</strong><p>'+(state.demo?"Demo; no server storage":"Signed-in owner; cloud storage with row-level security")+'</p></div><span class="status">'+(state.demo?"Preview":"Cloud")+'</span></div>'+
  '<div class="setting-row"><div><strong>Business</strong><p>'+h(b.name)+'</p></div>'+btn("Download JSON backup","export-json","button-outline button-small")+'</div>'+
  '<div class="setting-row"><div><strong>Data deletion</strong><p>Deletes the selected business and its related records.</p></div>'+btn("Delete business","delete-business","button-danger button-small")+'</div>')+
- box("Security and scope",'<p class="section-note">This release has owner-only workspaces. Team invitations, automatic weekly alerts, live grant monitoring and social-account publishing are not connected. AI requests, when configured, are processed via the secure server function; they do not use browser-stored API secrets.</p>');
+ box("Security and scope",'<p class="section-note">This release has owner-only workspaces. Team invitations, automatic weekly alerts, live grant monitoring and social-account publishing are not connected. No AI advisor or OpenAI API is required to complete the playbooks. Secure accounts and cloud saving remain optional until the dedicated database is configured.</p>');
 }
 function render(){
  const root=$("#app");
@@ -198,11 +201,12 @@ function render(){
  let body;
  if(p==="business")body=businessPage(b);
  else if(p==="journey")body=roadmapPage(b);
- else if(p==="advisor")body=advisorPage(b);
+ else if(p==="playbooks"||p==="toolkit")body=playbooksPage(b);
+ else if(p==="lesson")body=lessonPage(b);
  else if(p==="evidence")body=evidencePage(b);
  else if(p==="documents")body=documentsPage(b);
  else if(p==="financials")body=financialPage(b);
- else if(p==="toolkit")body=toolkitPage(b);
+
  else if(p==="settings")body=settingsPage(b);
  else if(p==="editdoc"){const a=state.artifacts.find(x=>x.id===state.editId);body=a?editDocument(a):documentsPage(b)}
  else body=overview(b);
@@ -212,8 +216,8 @@ async function loadExtras(){
  const b=active();
  if(!b){state.notes=[];state.artifacts=[];state.messages=[];return}
  if(state.demo){return}
- const [notes,artifacts,messages]=await Promise.all([api.listNotes(b.id),api.listArtifacts(b.id),api.listMessages(b.id)]);
- state.notes=notes;state.artifacts=artifacts;state.messages=messages;
+ const [notes,artifacts]=await Promise.all([api.listNotes(b.id),api.listArtifacts(b.id)]);
+ state.notes=notes;state.artifacts=artifacts;state.messages=[];
 }
 async function start(){
  state.ready=false;render();
@@ -240,7 +244,7 @@ async function createBusiness(v){
  let b;
  if(state.demo)b={...values,id:crypto.randomUUID(),updated_at:new Date().toISOString()};
  else b=await api.addBusiness(values);
- state.businesses.unshift(b);state.businessId=b.id;state.notes=[];state.artifacts=[];state.messages=[];go("home");toast("Business workspace created.");
+ state.businesses.unshift(b);state.businessId=b.id;state.notes=[];state.artifacts=[];state.messages=[];go("playbooks");toast("Business workspace created.");
 }
 async function persistNotes(payload){
  if(state.demo)state.notes.unshift({...payload,id:crypto.randomUUID(),created_at:new Date().toISOString()});
@@ -279,6 +283,8 @@ document.addEventListener("click",async e=>{
   if(a==="exitdemo"){state.demo=false;state.businesses=[];state.businessId=null;go("home");return}
   if(a==="signout"){await loaded(async()=>{await api.signOut();state.user=null;state.businesses=[];state.businessId=null;go("home")})();return}
   if(a==="create"){go("new");return}
+  if(a==="open-recommended"){state.playbookId=orderedPlaybooks(active())[0].id;state.stepIndex=0;go("lesson");return}
+  if(a==="copy-prompt"){const p=getPlaybook(state.playbookId);if(!p)return;const text=stepPrompt(p,p.steps[state.stepIndex],active());try{await navigator.clipboard.writeText(text);toast("Prompt copied.");}catch{const area=document.querySelector(".lesson-prompt");area?.focus();area?.select();toast("Select and copy the highlighted prompt.");}return}
   if(a.startsWith("nav-")){go(a.slice(4));return}
   if(a==="export-profile"){exportProfile();return}
   if(a==="export-json"){exportBackup();return}
@@ -299,26 +305,17 @@ document.addEventListener("click",async e=>{
  if(doc){state.editId=doc.dataset.openArtifact;go("editdoc");return}
  const save=e.target.closest("[data-download-artifact]");
  if(save){const item=state.artifacts.find(x=>x.id===save.dataset.downloadArtifact);if(item)download(slug(item.title)+".md",item.content,"text/markdown");return}
- const kit=e.target.closest("[data-toolkit]");
- if(kit){
-  const subjects=["marketing","digital profiles","Google Business Profile","pitch deck","funding","automation","operations"];
-  const intent=["marketing","marketing","ask","funding","funding","operations","operations"][Number(kit.dataset.toolkit)];
-  state.mode=intent;go("advisor");const textarea=$("#advisor-message");if(textarea)textarea.value="Create a practical "+subjects[Number(kit.dataset.toolkit)]+" working guide for my actual business. Use my saved facts; identify missing details and what needs official verification. Do not invent results, compliance rules or current opportunities.";
-  return;
- }
- const add=e.target.closest("[data-add-advice]");
- if(add){
-  const [idx,j]=add.dataset.addAdvice.split(":").map(Number);const advice=state.messages[idx]?.analysis?.next_actions?.[j];
-  if(advice?.title)await loaded(async()=>{
-    const b=active();const custom=[...(b.tasks?.__custom||[])];if(!custom.includes(advice.title))custom.push(advice.title);
-    await saveChanges({tasks:{...(b.tasks||{}),__custom:custom}});toast("Added to your roadmap.")})();
- }
+ const openPlaybook=e.target.closest("[data-open-playbook]");
+ if(openPlaybook){state.playbookId=openPlaybook.dataset.openPlaybook;state.stepIndex=0;go("lesson");return}
+ const openStep=e.target.closest("[data-open-step]");
+ if(openStep){state.stepIndex=Number(openStep.dataset.openStep);render();return}
 });
+document.addEventListener("change"});
 document.addEventListener("change",async e=>{
  if(e.target.id==="business-switch"){
   state.businessId=e.target.value;await loaded(async()=>{await loadExtras();go("home")})();return;
  }
- if(e.target.id==="advisor-mode"){state.mode=e.target.value;const t=$("#advisor-message");if(t)t.value=getSuggestedQuestion(active(),state.mode);}
+
 });
 document.addEventListener("submit",async e=>{
  e.preventDefault();const f=e.target,v=getVals(f);
@@ -359,17 +356,22 @@ document.addEventListener("submit",async e=>{
   else{const rows=await api.saveArtifact(id,v.content,v.title);Object.assign(item,rows[0]||{});}
   toast("Document saved.");
  })();return}
- if(f.id==="advisor-form"){await loaded(async()=>{
-  if(state.demo)throw Error("Live AI requires cloud setup and a signed-in account.");
-  const b=active(),text=String(v.message||"").trim();if(text.length<3)throw Error("Enter a more specific question.");
-  const answer=await api.askAdvisor(b.id,v.intent,text);
-  if(!answer?.result)throw Error("No advice returned.");
-  state.messages=await api.listMessages(b.id);
-  toast("Analysis saved to your business history.");
+ if(f.id==="lesson-form"){await loaded(async()=>{
+  const b=active(),p=getPlaybook(state.playbookId),i=state.stepIndex;
+  if(!p)throw Error("Guide not found.");
+  const submit=e.submitter?.value||"save";
+  const key="pb-note:"+p.id+":"+i;
+  const tasks={...(b.tasks||{}),[key]:String(v.notes||"").slice(0,8000)};
+  if(submit==="complete")tasks[stepKey(p.id,i)]=true;
+  await saveChanges({tasks});
+  toast(submit==="complete"?"Step marked complete.":"Your work is saved.");
  })();return}
+ 
+});
+window.addEventListener("hashchange"
 });
 window.addEventListener("hashchange",()=>{
  const p=(location.hash||"").replace("#/","")||"home";
- if(["home","business","journey","advisor","evidence","documents","financials","toolkit","settings","new"].includes(p)){state.page=p;render()}
+ if(["home","business","journey","playbooks","lesson","evidence","documents","financials","toolkit","settings","new"].includes(p)){state.page=p;render()}
 });
 start();
