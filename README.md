@@ -1,40 +1,29 @@
-# BizzIntel — a guided business-building platform
+# BizzIntel — build a business, step by step
 
-BizzIntel is built by **Bahamas AI Solutions** to teach entrepreneurs a repeatable path from business idea to launch, operations and growth.
+A practical, founder-led business-building playbook from **Bahamas AI Solutions**. Instead of an AI advisor or a pile of prompts, learners follow a structured process, record the work, and leave each lesson with a concrete deliverable.
 
-**This is not an AI advisor.** The user chooses where they are in business and follows practical modules with step-by-step instructions, checklists, optional copyable prompts, saved workbooks and progress tracking. No OpenAI API, agent, chat backend or paid AI subscription is required.
+## The method
 
-## What's included
+**Discover → Prove → Plan → Establish → Launch → Improve.** People pick where they are now and which business area they need first; no module is locked.
 
-Ten modules based on the founder's requested topic areas:
+Core sequence builds on founder-used approaches: defining the problem, root causes, customer segments, jobs-to-be-done, importance/dissatisfaction, market economics, small demand tests and a deliberate TEST / BUILD / PARK / KILL decision. Once worth pursuing, visualize the offer quickly, test a clear landing page, set up domain/email/social accounts, check GBP eligibility where relevant, and use direct outreach or measured Meta ads before expensive expansion.
 
-1. Idea & opportunity
-2. Airtight planning
-3. Facebook, Instagram, LinkedIn & WhatsApp Business setup
-4. Pitch decks & presentation preparation
-5. Google Business Profile setup & compliance
-6. Marketing and customer acquisition
-7. Practical automation
-8. Grants, tenders & opportunity tracking
-9. Websites and digital customer journey
-10. Weekly founder reviews
+**Important editorial distinction:** These are founder-requested or previously discussed techniques. The detailed lesson copy and illustrative examples are *draft curriculum*, not invented proof of founder results. Review [editorial guidance](docs/PLAYBOOK_EDITORIAL.md) before marketing a proprietary methodology.
 
-Each module has 4–6 steps with a rationale, action, clear deliverable, notes and optional prompt. Users can open any module at any time. Recommended ordering responds to current stage and goal; it does not lock content. Progress and notes attach to each business.
+## The product
 
-**Editorial status:** These are structured draft steps drawn from the user-requested categories, not a claim that every tactic exactly represents Amar Pearson's final methodology. The founder must review and approve individual lessons before public launch. See [docs/PLAYBOOK_EDITORIAL.md](docs/PLAYBOOK_EDITORIAL.md).
+- **10 guided playbooks, 62 exercises**: Ideation, Airtight Planning, Social Media, Pitch Decks, Google Business Profile, Marketing, Automations, Grants & Opportunities, Websites, Weekly Founder Reviews.
+- Each exercise provides a *why*, detailed *how-to steps*, illustrative example, common mistake, deliverable, expected evidence, workspace notes and optional ChatGPT prompt.
+- **Business-stage selector**: idea, planning, setup, launch, operating or scaling; plus industry, market and current business goal.
+- **Progress**: unique stable step IDs, ability to reopen a lesson, business-specific workbook notes and references. Legacy index-based completion is read for compatibility.
+- **Useful outputs**: full Markdown workbook export, business plan/pitch draft export, financial calculations, research notes and action list.
+- **No AI API needed**. Copy prompts only if they help you; no chatbot determines your business plan.
+- **Browser-only preview**: localStorage saves draft businesses/workbooks on the device if enabled; explicitly not encrypted or safe for secrets. Backup/export and clear controls included.
+- **Cloud-ready infrastructure**: optional owner-separated Supabase Auth and database schema with row-level security. A dedicated BizzIntel Supabase project has **not** been provisioned or connected; public launch still requires real security testing.
 
-## Current infrastructure
+## Run it
 
-- Static HTML, CSS and vanilla JS; zero frontend packages
-- Responsive private-workspace layout
-- Optional Supabase Auth and Postgres persistence with row-level security
-- Multi-business support, business profile, editable working documents, evidence notes, budget model, personal roadmap, export
-- Demo mode without backend credentials: **session-only and not saved**. Not suitable for sensitive business data
-- GitHub Actions checks and static Cloudflare Pages build
-
-## Development
-
-Node 22+.
+Node.js 22+:
 
 \`\`\`bash
 npm run check
@@ -43,10 +32,12 @@ npm run build
 npm run dev
 \`\`\`
 
-Preview at http://127.0.0.1:4173.
+The preview serves at http://127.0.0.1:4173. Cloudflare Pages: build command \`npm run build\`, output \`dist\`, no framework preset.
 
-For cloud saving, create a **dedicated** Supabase project, apply [the initial SQL migration](supabase/migrations/20261018160000_initial_bizzintel.sql), configure Auth, and provide public build variables as shown in [docs/SETUP.md](docs/SETUP.md).
+Cloud accounts can later use \`BIZZINTEL_SUPABASE_URL\` and \`BIZZINTEL_SUPABASE_PUBLISHABLE_KEY\` build variables (public keys only). See [setup](docs/SETUP.md).
 
-No production backend or deployment has been verified. Manual grant discovery and weekly reporting guides are included; automatic grant monitoring, social posting and recurring emails are **not** implemented.
+## Honest limits
 
-**Brand promise:** Teach the process, let the founder do the work, and help them track the results.
+No verified live deployment, authentication, cross-device saving, weekly scheduled reports, automatic grant discovery, or social-account publishing. The latter features are currently educational workflows. The platform has not been visually audited in a production browser. The site remains deliberately \`noindex\` during development.
+
+**Product standard:** teach the exact process, make the work easy to do, show a clear output, and never mistake activity for evidence.
