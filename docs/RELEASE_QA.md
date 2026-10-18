@@ -1,0 +1,11 @@
+# Release 1/2 QA acceptance criteria
+- Syntax, business-journey logic and scoring tests must pass.
+- UI must not allow login-free writes to production.
+- Demo clearly labeled as unsaved; no fake AI answers.
+- Auth: email/password signup, sign-in, reset, sign-out, session refresh.
+- Businesses: multi-venture switching, create/edit/delete, task completion, notes and document CRUD, export.
+- Security: RLS enabled and enforced, cross-user read/write denial; Edge verifies user + business and private API key stays server-side.
+- AI: mode selection, error paths and limits, saves messages, separates observed facts from assumptions and produces next actions.
+- Stage-specific pathways: idea/planning/setup/launch/operating/scaling, adaptive based on industry and goal.
+- Browser: desktop/mobile, forms, empty states, error states, a11y keyboard access.
+- Not verified yet: live Supabase RLS and Auth, live OpenAI response, deployed Cloudflare origins. Require dedicated project & secrets.
