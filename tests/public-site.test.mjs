@@ -97,11 +97,13 @@ test("all method pages offer a concrete action, prompt, deliverable and next ste
  assert.equal(keys.size,32);
  assert.equal(nextStep("grow","library"),null);
 });
-test("first method action sets up a ChatGPT Project with quality standards",async()=>{
- const html=await readFile(localTarget("/method/capture/project/"),"utf8");
- assert.match(html,/ChatGPT Project/);
- assert.match(html,/Business Source of Truth/);
- assert.match(html,/quality rules|quality standards|confirmed facts/i);
+test("project setup and its next lesson establish the business brief and QA standards",async()=>{
+ const first=await readFile(localTarget("/method/capture/project/"),"utf8");
+ const second=await readFile(localTarget("/method/capture/instructions/"),"utf8");
+ assert.match(first,/ChatGPT Project/);
+ assert.match(first,/Business Source of Truth/);
+ assert.match(first,/href="\/method\/capture\/instructions\/"/);
+ assert.match(second,/quality standards|quality rules|verified facts/i);
 });
 test("strategy pages contain linked official references for GBP, SEO, chamber and Toastmasters",async()=>{
  const references=[
