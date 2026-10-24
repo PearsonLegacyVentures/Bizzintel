@@ -1,29 +1,21 @@
-# BizzIntel informational site — quality checklist
+# BizzIntel — method site release QA
 
-## Static content
-- [x] Fifteen generated public routes: homepage, library, start, resources, about, 10 guides.
-- [x] Ten full guides and 62 lessons are visible in generated HTML without JS.
-- [x] Dedicated on-page table of contents and anchor links to lesson headings.
-- [x] Illustrated example, common mistake, actual how-to instructions and deliverable for each lesson.
-- [x] Clear visitor journey, no login/dashboard on public pages.
-- [x] Verified official resources linked for The Bahamas and Google Business Profile.
+Implemented:
+- Homepage focuses on first practical action, with an 8-phase path.
+- Eight phase overview pages and 32 short, specific action pages.
+- Each action offers timing, instructions, a copyable ChatGPT prompt, deliverable, acceptance checks and a next button.
+- No mandatory login, chat agent or backend.
+- Ten reference guides with 62 previously created lessons remain available.
+- Official Bahamas Chamber, SBDC, Toastmasters, Google and Cloudflare references where suitable.
+- Responsive CSS; menu, copy and optional device-only mark-complete interaction.
+- Default noindex for unpublished editorial content.
 
-## Interactions
-- [x] Site JS includes mobile menu, search, stage filter, copyable checklist, optional prompt copy.
-- [x] Source-level page generation and 268 internal links checked in a simulated build with no missing targets.
-- [ ] Actual browser interaction and clipboard test on served build.
-- [ ] Full desktop/mobile visual inspection and accessibility audit.
+Tests to perform or verify:
+- Static generator / link validation across all 56 generated pages.
+- CI workflow completed for final commit.
+- Real Cloudflare deployment and representative pages.
+- Actual desktop/mobile browser visual QA and clipboard/localStorage.
+- Founder approval of the full teaching method.
+- Public domain SEO launch/indexing when authorized.
 
-## Publishing
-- [x] Cloudflare Pages compatible static \`dist\` build path.
-- [x] Default noindex until deliberate publication choice.
-- [x] Optional SITE_URL canonical + sitemap configuration.
-- [ ] GitHub Actions run confirmed passing.
-- [ ] Cloudflare Pages project/domain inspected; deployment verified.
-- [ ] Final editorial sign-off and real audience usability tests.
-
-## Guardrails
-- Do not invent case-study outcomes or pretend examples are real.
-- Do not state grant/tender statuses without checking original issuers.
-- Do not treat GBP eligibility as universal.
-- Don't reintroduce mandatory sign-in or an AI advisor.
+Not implemented: live grant monitoring, email reports, ads/social account management, cloud user records or AI API execution.
