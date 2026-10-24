@@ -63,7 +63,7 @@ test("homepage is content-first and links directly into business tutorials",asyn
  assert.match(html,/No login\. No paywall\./);
  assert.match(html,/href="\/guides\/ideation\/"/);
  assert.match(html,/href="\/start-here\/"/);
- assert.doesNotMatch(html,/supabase|\/src\/app\.js|login|sign-up/i);
+ assert.doesNotMatch(html,/supabase|\/src\/app\.js|id="auth-form"|data-action="signout"/i);
 });
 test("unapproved work is not indexed until publication is explicitly enabled",async()=>{
  const html=await readFile(join(dist,"index.html"),"utf8");
