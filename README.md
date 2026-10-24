@@ -1,71 +1,40 @@
-# BizzIntel — practical business guides
+# BizzIntel — The founder's practical build sequence
 
-**BizzIntel is a free-to-read informational website for people starting and running real businesses.** It is a project of [Bahamas AI Solutions](https://bahamasaisolutions.com/).
+BizzIntel is a public, practical business-building site by Bahamas AI Solutions. It walks a founder through exactly what to do from an idea to customers and expansion. Not a chatbot, CRM, or business-management platform. There is no login.
 
-**No accounts, no AI advisor, no dashboard.** Readers can immediately use tutorials to validate an idea, plan their money, establish a digital presence, start marketing, prepare pitches, find relevant resources and manage everyday operations.
+Live site: https://bizzintel.pages.dev/
+The Method: https://bizzintel.pages.dev/method/
+First action: https://bizzintel.pages.dev/method/capture/project/
 
-## What's on the public website
+## Eight phases and 32 actions
 
-- **Homepage** — clear introduction, paths for three business situations, featured guides and practical starting questions.
-- **Start here** (\`/start-here/\`) — choose idea, setup or operating and follow a short recommended reading sequence.
-- **Guides** (\`/guides/\`) — searchable/filterable library of ten substantial topic guides.
-- **Guide articles** (\`/guides/<topic>/\`) — 62 lessons rendered as semantic, server-readable HTML across 10 articles, including step-by-step instructions, examples, mistakes to avoid, deliverables and optional copyable prompts.
-- **Resources** (\`/resources/\`) — links to verified official Bahamas business licensing, NIB, SBDC, Google and relevant platform guidance.
-- **About** (\`/about/\`) — clear founder and editorial context, without inflated results or fake testimonials.
+1. Capture the idea — create a ChatGPT Project, tell the whole business story, set quality rules, set pass/fail gates.
+2. Research — successful global businesses, Caribbean operators, local competitors and real demand testing.
+3. Visualize — customer journey, first website prototype, usability checks, and a practical visual business plan.
+4. Economics — unit margins, cash needs, genuine Bahamas/Caribbean development alignment, verified grants and expansion feasibility.
+5. Presence — strategic name, domain/email/SEO, Google Business Profile eligibility and the relevant social and messaging accounts.
+6. Website and systems — production build brief, SEO/mobile audit, backend and data security, and a minimal CRM.
+7. Customers — Google versus Meta advertising, controlled ad test, regional/local partners, Chamber/SBDC/Toastmasters connections.
+8. Improve and grow — measured weekly review, straightforward automation, expansion pilot and updated business source of truth.
 
-Each guide has a contents list, anchorable lesson headings, copyable action checklist, optional prompt copying, next-guide link, working responsive mobile navigation and readable print layout. **JavaScript is an enhancement, not a requirement to read the content.**
+Each action is a short, separate HTML page with **When**, **Do this now**, **Copy into ChatGPT**, **Finish with**, **Check**, and **Next action**. Prompts are aids; customer evidence, real economics, and accountable execution decide whether a business is viable.
 
-## Design and architecture
+The ten prior topical guides and 62 supporting lessons remain at /guides/ for deeper reading.
 
-- Premium dark-grey identity, restrained green accents, clear readable typography and warm editorial page backgrounds.
-- Zero runtime UI frameworks, analytics SDKs, AI subscriptions, logins or server dependencies.
-- **Static prerendering** by \`scripts/public-build.mjs\` using \`src/playbooks.js\` as the lesson source.
-- Static routes served as directory \`index.html\` files, suitable for Cloudflare Pages.
-- Programmatic metadata and (when enabled) sitemap.xml + canonical URLs.
-- Accessible labels, keyboard-friendly controls, skip-to-content, reduced-motion support, print styles.
+## Code and deployment
 
-## Run locally (Node 22+)
+- src/method.js — canonical sequence and exercises
+- scripts/method-render.mjs — phase and action page HTML
+- scripts/public-build.mjs — site generator, homepage and resource navigation
+- src/playbooks.js — deeper topic guides
+- site.js — optional completion tracking on THIS DEVICE and prompt copying
+- styles.css — mobile-first presentation
 
-\`\`\`sh
-npm run check
-npm test
-npm run build
-npm run dev
-\`\`\`
+Node 22+: run npm run check, npm run build, then npm test.
+Cloudflare Pages output: dist. The generated dist directory is committed so an automatic deployment still has pages even if no build command runs. Regenerate dist whenever changing course or design sources.
 
-Open \`http://127.0.0.1:4173\` after running \`npm run dev\`.
+The public pages are static and do not require a backend, ChatGPT integration or API key. Device-local progress does not synchronize; do not enter sensitive data into this educational site.
 
-Cloudflare Pages: **Build command \`npm run build\`**, **output directory \`dist\`**, **no framework preset**.
+Indexing is disabled pending publication approval. Set PUBLIC_INDEXING=true and SITE_URL to the approved HTTPS domain at build time before generating live canonical links and sitemap.
 
-### Publication / indexing controls
-
-The build defaults to \`noindex,nofollow\` while curriculum and the final public domain are being reviewed. After editorial approval, set both of the following **Cloudflare Pages build variables**:
-
-\`\`\`text
-PUBLIC_INDEXING=true
-SITE_URL=https://your-real-domain.example
-\`\`\`
-
-Replace the example with the actual authorized domain. This enables \`index,follow\`, canonical URLs, robots.txt allowance and a sitemap. The code does not assume a domain.
-
-**Pushing to GitHub is not confirmation of a live Cloudflare deployment.** Check the Pages project, build logs and deployed URL separately.
-
-## Content policy
-
-The founder-selected topics and business-building methods come from conversations with Amar Pearson. Examples on guide pages are expressly illustrative; they are not evidence of actual client results, approvals, earnings or competitive research. Local legal information and programme status must be checked at original official sources. See [editorial rules](docs/PLAYBOOK_EDITORIAL.md).
-
-## Legacy code
-
-The previous app-style prototype and optional Supabase schema still exist in the repository to preserve work history, **but none of the app, authentication UI or Supabase code is included in the public-site build**. The informational site does not use a backend or ask for visitor information.
-
-## Outstanding launch work
-
-- Test the Cloudflare deployment on the actual domain.
-- Complete real-browser visual and accessibility review on desktop/mobile.
-- Approve final curriculum and any founder-specific instructional claims.
-- Decide and configure the public canonical domain and indexing.
-- No auto-monitoring of grants, no weekly report delivery and no direct integrations to social platforms are claimed.
-
-## Cloudflare deployment resilience
-
-This repository commits the built `dist/` pages so Cloudflare Pages can deploy the generated content even when the dashboard has no build command. `wrangler.toml` points the deployment at `./dist`. The recommended build command remains `npm run build` for fresh content. When updating site source, regenerate and commit `dist/` as part of the release so fallback assets do not become stale.
+Editorial note: curriculum is informed by the founder's stated approach, but illustrative examples are not actual venture results, and any unsupported technique needs founder approval. Check current official rules, sources and funding availability before action.
