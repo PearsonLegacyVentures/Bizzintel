@@ -114,3 +114,29 @@ test("strategy pages contain linked official references for GBP, SEO, chamber an
  ];
  for(const [path,url] of references)assert.ok((await readFile(localTarget(path),"utf8")).includes(url),path+" missing "+url);
 });
+
+test("Windows 98 desktop shell appears across pages with usable controls",async()=>{
+ const routes=["/","/method/","/method/capture/project/","/guides/","/resources/"];
+ for(const route of routes){
+  const html=await readFile(localTarget(route),"utf8");
+  assert.match(html,/class="retro-window"/,route+" should have window chrome");
+  assert.match(html,/class="retro-titlebar"/);
+  assert.match(html,/id="retro-start-button"/);
+  assert.match(html,/id="retro-start-menu" hidden/);
+  assert.match(html,/data-window-minimize/);
+  assert.match(html,/data-window-maximize/);
+  assert.match(html,/data-window-close/);
+  assert.match(html,/data-window-restore/);
+  assert.match(html,/id="retro-task-clock"/);
+  assert.match(html,/<main id="main">/);
+ }
+ const css=await readFile(join(dist,"styles.css"),"utf8");
+ const js=await readFile(join(dist,"site.js"),"utf8");
+ assert.match(css,/BIZZINTEL 98/);
+ assert.match(css,/retro-taskbar/);
+ assert.match(css,/retro-window-hidden/);
+ assert.match(css,/@media\(max-width:560px\)/);
+ assert.match(js,/toggleStart/);
+ assert.match(js,/setWindowState/);
+ assert.match(js,/paintClock/);
+});
