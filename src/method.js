@@ -15,7 +15,7 @@ export const PATH = [
   prompt:"I am starting a business called [WORKING NAME] in [COUNTRY]. The concept is [IDEA]. I think the customer is [WHO], the problem is [PROBLEM], and the possible offer is [OFFER]. I can initially invest [BUDGET] and spend [HOURS/WEEK]. Ask me only the questions needed to complete a factual one-page Business Source of Truth. Separate confirmed facts, assumptions and open questions. Do not fabricate any numbers, competitors or customer evidence.",
   check:["Project is named and separated from other ventures","A one-page source-of-truth brief exists","Missing facts are marked as missing"],
   avoid:"Don't assume a ChatGPT Project verifies your idea or automatically owns documents in Google Drive.",
-  links:[["ChatGPT Projects and Work","https://help.openai.com/en/articles/20001275-chatgpt-work-and-codex"]]},
+  links:[["ChatGPT Projects and Work","https://help.openai.com/en/articles/10169521-projects-in-chatgpt"]]},
   {id:"instructions",title:"Set your quality standards",time:"15 min",when:"Before requesting research, designs or business plans.",goal:"Give ChatGPT a consistent definition of useful work, and make it challenge weak ideas.",
   actions:["Open your ChatGPT Project instructions and paste the standards below, tailored to your situation.","Specify market/country, business type, first customer, budget, realistic timeline and brand tone.","Tell it how to format every answer: recommendation, evidence, risks, cheapest test and next action.","Use a separate decision log. When you change a core assumption, record why and what evidence changed."],
   output:"A persistent set of review criteria for every response in the project.",
