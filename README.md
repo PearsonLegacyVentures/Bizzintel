@@ -1,43 +1,67 @@
-# BizzIntel — build a business, step by step
+# BizzIntel — practical business guides
 
-A practical, founder-led business-building playbook from **Bahamas AI Solutions**. Instead of an AI advisor or a pile of prompts, learners follow a structured process, record the work, and leave each lesson with a concrete deliverable.
+**BizzIntel is a free-to-read informational website for people starting and running real businesses.** It is a project of [Bahamas AI Solutions](https://bahamasaisolutions.com/).
 
-## The method
+**No accounts, no AI advisor, no dashboard.** Readers can immediately use tutorials to validate an idea, plan their money, establish a digital presence, start marketing, prepare pitches, find relevant resources and manage everyday operations.
 
-**Discover → Prove → Plan → Establish → Launch → Improve.** People pick where they are now and which business area they need first; no module is locked.
+## What's on the public website
 
-Core sequence builds on founder-used approaches: defining the problem, root causes, customer segments, jobs-to-be-done, importance/dissatisfaction, market economics, small demand tests and a deliberate TEST / BUILD / PARK / KILL decision. Once worth pursuing, visualize the offer quickly, test a clear landing page, set up domain/email/social accounts, check GBP eligibility where relevant, and use direct outreach or measured Meta ads before expensive expansion.
+- **Homepage** — clear introduction, paths for three business situations, featured guides and practical starting questions.
+- **Start here** (\`/start-here/\`) — choose idea, setup or operating and follow a short recommended reading sequence.
+- **Guides** (\`/guides/\`) — searchable/filterable library of ten substantial topic guides.
+- **Guide articles** (\`/guides/<topic>/\`) — 62 lessons rendered as semantic, server-readable HTML across 10 articles, including step-by-step instructions, examples, mistakes to avoid, deliverables and optional copyable prompts.
+- **Resources** (\`/resources/\`) — links to verified official Bahamas business licensing, NIB, SBDC, Google and relevant platform guidance.
+- **About** (\`/about/\`) — clear founder and editorial context, without inflated results or fake testimonials.
 
-**Important editorial distinction:** These are founder-requested or previously discussed techniques. The detailed lesson copy and illustrative examples are *draft curriculum*, not invented proof of founder results. Review [editorial guidance](docs/PLAYBOOK_EDITORIAL.md) before marketing a proprietary methodology.
+Each guide has a contents list, anchorable lesson headings, copyable action checklist, optional prompt copying, next-guide link, working responsive mobile navigation and readable print layout. **JavaScript is an enhancement, not a requirement to read the content.**
 
-## The product
+## Design and architecture
 
-- **10 guided playbooks, 62 exercises**: Ideation, Airtight Planning, Social Media, Pitch Decks, Google Business Profile, Marketing, Automations, Grants & Opportunities, Websites, Weekly Founder Reviews.
-- Each exercise provides a *why*, detailed *how-to steps*, illustrative example, common mistake, deliverable, expected evidence, workspace notes and optional ChatGPT prompt.
-- **Business-stage selector**: idea, planning, setup, launch, operating or scaling; plus industry, market and current business goal.
-- **Progress**: unique stable step IDs, ability to reopen a lesson, business-specific workbook notes and references. Legacy index-based completion is read for compatibility.
-- **Useful outputs**: full Markdown workbook export, business plan/pitch draft export, financial calculations, research notes and action list.
-- **No AI API needed**. Copy prompts only if they help you; no chatbot determines your business plan.
-- **Browser-only preview**: localStorage saves draft businesses/workbooks on the device if enabled; explicitly not encrypted or safe for secrets. Backup/export and clear controls included.
-- **Cloud-ready infrastructure**: optional owner-separated Supabase Auth and database schema with row-level security. A dedicated BizzIntel Supabase project has **not** been provisioned or connected; public launch still requires real security testing.
+- Premium dark-grey identity, restrained green accents, clear readable typography and warm editorial page backgrounds.
+- Zero runtime UI frameworks, analytics SDKs, AI subscriptions, logins or server dependencies.
+- **Static prerendering** by \`scripts/public-build.mjs\` using \`src/playbooks.js\` as the lesson source.
+- Static routes served as directory \`index.html\` files, suitable for Cloudflare Pages.
+- Programmatic metadata and (when enabled) sitemap.xml + canonical URLs.
+- Accessible labels, keyboard-friendly controls, skip-to-content, reduced-motion support, print styles.
 
-## Run it
+## Run locally (Node 22+)
 
-Node.js 22+:
-
-\`\`\`bash
+\`\`\`sh
 npm run check
 npm test
 npm run build
 npm run dev
 \`\`\`
 
-The preview serves at http://127.0.0.1:4173. Cloudflare Pages: build command \`npm run build\`, output \`dist\`, no framework preset.
+Open \`http://127.0.0.1:4173\` after running \`npm run dev\`.
 
-Cloud accounts can later use \`BIZZINTEL_SUPABASE_URL\` and \`BIZZINTEL_SUPABASE_PUBLISHABLE_KEY\` build variables (public keys only). See [setup](docs/SETUP.md).
+Cloudflare Pages: **Build command \`npm run build\`**, **output directory \`dist\`**, **no framework preset**.
 
-## Honest limits
+### Publication / indexing controls
 
-No verified live deployment, authentication, cross-device saving, weekly scheduled reports, automatic grant discovery, or social-account publishing. The latter features are currently educational workflows. The platform has not been visually audited in a production browser. The site remains deliberately \`noindex\` during development.
+The build defaults to \`noindex,nofollow\` while curriculum and the final public domain are being reviewed. After editorial approval, set both of the following **Cloudflare Pages build variables**:
 
-**Product standard:** teach the exact process, make the work easy to do, show a clear output, and never mistake activity for evidence.
+\`\`\`text
+PUBLIC_INDEXING=true
+SITE_URL=https://your-real-domain.example
+\`\`\`
+
+Replace the example with the actual authorized domain. This enables \`index,follow\`, canonical URLs, robots.txt allowance and a sitemap. The code does not assume a domain.
+
+**Pushing to GitHub is not confirmation of a live Cloudflare deployment.** Check the Pages project, build logs and deployed URL separately.
+
+## Content policy
+
+The founder-selected topics and business-building methods come from conversations with Amar Pearson. Examples on guide pages are expressly illustrative; they are not evidence of actual client results, approvals, earnings or competitive research. Local legal information and programme status must be checked at original official sources. See [editorial rules](docs/PLAYBOOK_EDITORIAL.md).
+
+## Legacy code
+
+The previous app-style prototype and optional Supabase schema still exist in the repository to preserve work history, **but none of the app, authentication UI or Supabase code is included in the public-site build**. The informational site does not use a backend or ask for visitor information.
+
+## Outstanding launch work
+
+- Test the Cloudflare deployment on the actual domain.
+- Complete real-browser visual and accessibility review on desktop/mobile.
+- Approve final curriculum and any founder-specific instructional claims.
+- Decide and configure the public canonical domain and indexing.
+- No auto-monitoring of grants, no weekly report delivery and no direct integrations to social platforms are claimed.
