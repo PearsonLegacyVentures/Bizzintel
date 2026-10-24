@@ -38,7 +38,7 @@ export function createMethodPages({PATH,ALL_STEPS,stepHref,phaseHref,nextStep,pr
    '<section class="method-directory" id="all-phases"><div class="wrap"><div class="method-directory-head">'+label("THE FULL SEQUENCE")+
    '<h2>Eight phases. In order.</h2><p>Follow from the beginning or jump to the phase you need. Later phases depend on earlier evidence.</p></div>'+
    '<div class="method-phase-grid">'+phaseCards+'</div></div></section>'+
-   '<section class="method-bottom"><div class="wrap"><div><span>NOT READY TO COMMIT?</span><h2>Start by documenting the business idea.</h2><p>There's no requirement to buy software, hire a developer or spend on ads to complete the first phase.</p></div>'+
+   '<section class="method-bottom"><div class="wrap"><div><span>NOT READY TO COMMIT?</span><h2>Start by documenting the business idea.</h2><p>There is no requirement to buy software, hire a developer or spend on ads to complete the first phase.</p></div>'+
    '<a class="button primary" href="'+stepHref(ALL_STEPS[0])+'">Begin step 01 '+arrow+'</a></div></section>';
   return layout({path:"/method/",heading:"The BizzIntel Method",description:"A specific 8-phase business-building roadmap: create a ChatGPT Project, validate the market, prototype, test finances, launch social profiles, build a secure site and get customers.",body:content});
  }
