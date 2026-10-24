@@ -65,3 +65,7 @@ The previous app-style prototype and optional Supabase schema still exist in the
 - Approve final curriculum and any founder-specific instructional claims.
 - Decide and configure the public canonical domain and indexing.
 - No auto-monitoring of grants, no weekly report delivery and no direct integrations to social platforms are claimed.
+
+## Cloudflare deployment resilience
+
+This repository commits the built `dist/` pages so Cloudflare Pages can deploy the generated content even when the dashboard has no build command. `wrangler.toml` points the deployment at `./dist`. The recommended build command remains `npm run build` for fresh content. When updating site source, regenerate and commit `dist/` as part of the release so fallback assets do not become stale.
