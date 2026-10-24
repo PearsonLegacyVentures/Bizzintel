@@ -108,9 +108,10 @@ function methodRefresh(){
  const data=methodData();
  $$("[data-progress-phase]").forEach(el=>{
   const phase=el.getAttribute("data-progress-phase");
-  const steps=$$('[data-method-completion^="'+phase+'/"]');
+  const keys=el.getAttribute("data-progress-keys")?.split(",").filter(Boolean);
+  const steps=keys?.length?keys:$('[data-method-completion^="'+phase+'/"]').map(node=>node.getAttribute("data-method-completion"));
   if(steps.length){
-   const count=steps.filter(node=>data[node.getAttribute("data-method-completion")]).length;
+   const count=steps.filter(key=>Boolean(data[key])).length;
    el.textContent=count+" / "+steps.length+" complete";
   }
  });
