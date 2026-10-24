@@ -1,5 +1,7 @@
 import { mkdir, writeFile, copyFile, rm } from "node:fs/promises";
 import { PLAYBOOKS } from "../src/playbooks.js";
+import { PATH,ALL_STEPS,stepHref,phaseHref,nextStep,previousStep } from "../src/method.js";
+import { createMethodPages } from "./method-render.mjs";
 
 const OUT="dist";
 const SITE=(process.env.SITE_URL||"").trim().replace(/\/+$/,"");
@@ -18,6 +20,10 @@ const categories=[
 {id:"grow",label:"Pitch, operate & grow",description:"Make your business easier to run and prepare for opportunities.",modules:["pitch","automations","opportunities","weekly"]}
 ];
 const resources=[
+{title:"Bahamas Chamber of Commerce and Employers’ Confederation",detail:"Official business events, networking, advocacy and membership information.",group:"Business networks",url:"https://www.thebahamaschamber.com/"},
+{title:"Toastmasters — Find a Club",detail:"Find a local or online club to practice pitches, speaking and leadership. Not a funding programme.",group:"Business networks",url:"https://www.toastmasters.org/find-a-club"},
+{title:"Google Search Central — SEO Starter Guide",detail:"Official technical and content basics for discoverable websites.",group:"Online visibility",url:"https://developers.google.com/search/docs/fundamentals/seo-starter-guide"},
+{title:"Google Ads — Campaign types",detail:"Compare search, video and other ad types for business goals.",group:"Online visibility",url:"https://support.google.com/google-ads/answer/2567043?hl=en"},
 {title:"Bahamas Department of Inland Revenue",detail:"Official business licence rules, application guidance and updates.",group:"Registration & compliance",url:"https://inlandrevenue.finance.gov.bs/business-licence/"},
 {title:"National Insurance Board — Employers",detail:"Employer registration guidance and contribution information.",group:"Registration & compliance",url:"https://www.nib-bahamas.com/_m1758/Employers"},
 {title:"National Insurance Board — Online Portals",detail:"Official online services, including Employer Self Service.",group:"Registration & compliance",url:"https://www.nib-bahamas.com/portals"},
@@ -31,17 +37,17 @@ const html=(tag,attrs,content)=>'<'+tag+attrs+'>'+content+'</'+tag+'>';
 const link=(href,text,cls)=>'<a href="'+esc(href)+'"'+(cls?' class="'+cls+'"':'')+'>'+text+'</a>';
 const mark='<span class="logo-box" aria-hidden="true">b<span>.</span></span><span class="logo-type">bizz<span>intel</span><span class="dot">.</span></span>';
 const icons={arrow:'<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h13m-6-6 6 6-6 6"/></svg>',arrowup:'<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 19 19 5M9 5h10v10"/></svg>',search:'<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg>'};
-const navItems=[["/guides/","Guides"],["/start-here/","Start here"],["/resources/","Resources"],["/about/","About"]];
+const navItems=[["/method/","The Method"],["/guides/","Deep dives"],["/resources/","Resources"],["/about/","About"]];
 function layout({path,heading,description,body,type="website",schema}){
  const fullTitle=heading==="BizzIntel"?"BizzIntel — Practical business guides":heading+" | BizzIntel";
  const metadata=ld(schema||{"@context":"https://schema.org","@type":type==="article"?"Article":"WebPage","name":heading,"description":description,"url":url(path)});
  const nav='<header class="site-header"><div class="wrap nav-wrap">'+link("/",mark,"brand")+
   '<button type="button" class="menu-toggle" aria-expanded="false" aria-controls="main-navigation" aria-label="Open navigation"><span></span><span></span></button>'+
   '<nav id="main-navigation" class="nav-links" aria-label="Main navigation">'+navItems.map(([href,text])=>link(href,esc(text),path===href?"active":"")).join("")+'</nav>'+
-  '<a href="/guides/" class="top-action">Explore guides '+icons.arrow+'</a></div></header>';
+  '<a href="/method/" class="top-action">Start the method '+icons.arrow+'</a></div></header>';
  const footer='<footer class="site-footer"><div class="wrap footer-main"><div class="footer-brand">'+mark+
   '<p>Plain-language guides to help you turn an idea into a real business and keep improving it.</p></div>'+
-  '<div class="footer-links"><div><strong>Learn</strong>'+link("/start-here/","Start here")+link("/guides/","All guides")+link("/resources/","Useful resources")+'</div>'+
+  '<div class="footer-links"><div><strong>Learn</strong>'+link("/method/","Follow the method")+link("/start-here/","Choose your stage")+link("/guides/","Deep-dive guides")+link("/resources/","Useful resources")+'</div>'+
   '<div><strong>About</strong>'+link("/about/","Our approach")+link("https://bahamasaisolutions.com/","Bahamas AI Solutions")+'</div></div></div>'+
   '<div class="wrap footer-bottom"><span>© '+new Date().getUTCFullYear()+' BizzIntel · A Bahamas AI Solutions project</span><span>Learn the process. Do the work.</span></div></footer>';
  return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
@@ -83,50 +89,34 @@ function featured(){
   ].map((s,i)=>'<div><span>'+number(i+1)+'</span><p>'+esc(s)+'</p></div>').join("")+'</div></section>';
 }
 function home(){
- const hero='<section class="hero"><div class="wrap hero-grid"><div class="hero-text">'+label("FOR PEOPLE BUILDING REAL BUSINESSES")+
-  '<h1>Build a business.<br><em>One useful step<br>at a time.</em></h1>'+
-  '<p class="hero-lead">From that first business idea to customers, marketing, systems and growth. Practical guides that show you what to do, how to do it, and what to finish with.</p>'+
-  '<div class="hero-actions">'+btn("/start-here/","Show me where to start")+btn("/guides/","Browse every guide","secondary")+'</div>'+
-  '<div class="hero-note"><span class="pulse-dot"></span>No login. No paywall. No AI telling you what to do.</div></div>'+
-  '<div class="hero-visual" aria-label="Example three-stage learning journey"><div class="visual-grid"></div>'+
-  '<div class="visual-top"><span class="mini-logo">B / FIELD NOTES</span><span>ISSUE 001</span></div>'+
-  '<div class="visual-heading">A better way<br>to start.</div>'+
-  '<div class="visual-subtitle">Start with the problem. Finish with evidence.</div>'+
-  '<div class="visual-path">'+[
-  ["01","UNDERSTAND","The customer problem"],
-  ["02","TEST","Real interest and willingness to pay"],
-  ["03","DECIDE","Build, refine or walk away"]
-  ].map((x,i)=>'<div class="visual-step '+(i===1?"focus":"")+'"><span class="step-index">'+x[0]+'</span><div><small>'+x[1]+'</small><strong>'+x[2]+'</strong></div><span class="step-bullet">'+(i===2?"↗":"")+'</span></div>').join("")+'</div>'+
-  '<div class="visual-bottom"><span>LESS THEORY.</span><span>MORE DOING.</span></div></div></div>'+
-  '<div class="wrap hero-rail"><span>BUILT FOR FOUNDERS IN THE BAHAMAS & BEYOND</span><span>'+PLAYBOOKS.length+' GUIDES / '+total+' PRACTICAL LESSONS</span></div></section>';
- const path='<section class="section section-intro" id="path"><div class="wrap"><div class="section-heading">'+
-  '<div>'+label("01 / FIND YOUR STARTING POINT")+'<h2>You do not need to start from zero.</h2><p>Pick where your business is today. We will surface relevant guides, but every lesson stays open.</p></div>'+
-  link("/start-here/","View the full path "+icons.arrow,"inline-link")+'</div>'+
-  '<div class="path-grid">'+[
-  ["01","I have an idea","Figure out whether it is worth pursuing.","/start-here/#idea"],
-  ["02","I am setting it up","Work through planning, digital presence and launch basics.","/start-here/#setup"],
-  ["03","I am already operating","Improve marketing, money and repeatable systems.","/start-here/#operating"]
-  ].map(x=>'<a class="path-card" href="'+x[3]+'"><span>'+x[0]+' / YOUR STAGE</span><h3>'+x[1]+'</h3><p>'+x[2]+'</p><b>'+icons.arrow+'</b></a>').join("")+'</div></div></section>';
- const guides='<section class="section section-guides"><div class="wrap"><div class="section-heading">'+
-  '<div>'+label("02 / THE LIBRARY")+'<h2>Find the business lesson you need.</h2><p>Plain-English instructions, examples, mistakes to avoid, and something useful to finish with.</p></div>'+
-  link("/guides/","View all guides "+icons.arrow,"inline-link")+'</div>'+
-  '<div class="guide-grid">'+categoryCards(PLAYBOOKS.slice(0,6))+'</div></div></section>';
- const value='<section class="section proof-section"><div class="wrap proof-grid"><div>'+label("03 / HOW OUR LESSONS WORK")+
-  '<h2>Learn it.<br><em>Put it to work.</em></h2><p>Every lesson moves past general advice. Follow the instructions and create a real output for your business.</p>'+
-  btn("/guides/","Find a practical guide")+'</div><div class="proof-stack">'+[
-  ["01","The explanation","Why this step matters in the real business."],
-  ["02","The instructions","What to do, in the order it needs doing."],
-  ["03","The example","What the result could look like, clearly labeled."],
-  ["04","The deliverable","What to finish before moving forward."]
-  ].map(x=>'<div><span>'+x[0]+'</span><div><strong>'+x[1]+'</strong><p>'+x[2]+'</p></div></div>').join("")+'</div></div></section>';
- const finish='<section class="section"><div class="wrap">'+featured()+'</div></section>'+
-  '<section class="founder-band"><div class="wrap founder-band-inner"><div>'+label("FROM THE PEOPLE BUILDING BUSINESSES")+
-  '<h2>Useful guidance, shaped by real work.</h2><p>BizzIntel is created by Bahamas AI Solutions, founded by Amar Pearson. Our business-building perspective comes from working on websites, service operations and practical systems—not an AI-generated playbook.</p></div>'+
-  '<a href="https://bahamasaisolutions.com/work/" target="_blank" rel="noopener noreferrer" class="inline-link">View our Track Record '+icons.arrowup+'</a></div></section>'+
-  '<section class="final-cta"><div class="wrap final-inner">'+label("START WITH SOMETHING USEFUL")+
-  '<h2>You do not have to figure<br>everything out at once.</h2>'+
-  '<p>Start with the next practical lesson, finish the exercise, and move forward with more clarity.</p>'+btn("/start-here/","Find your first guide")+'</div></section>';
- return layout({path:"/",heading:"BizzIntel",description:"Practical, free business guides for entrepreneurs in The Bahamas and beyond. Learn ideation, planning, social media, Google Business Profile, marketing, pitch decks and more.",body:hero+path+guides+value+finish});
+ const intro='<section class="method-home-hero"><div class="wrap method-home-grid"><div class="method-home-copy">'+label("THE ACTUAL PROCESS · NOT MORE BUSINESS THEORY")+
+ '<h1>Here is how<br>I would build<br><em>a business.</em></h1>'+
+ '<p>Start with an idea. Use ChatGPT to capture the full story. Research competitors worldwide, across the Caribbean and locally. See the business before building it. Prove the money works. Then launch the website, systems and customer channels.</p>'+
+ '<div class="hero-actions">'+btn("/method/capture/project/","Start at step 01")+btn("/method/","View the entire method","secondary")+'</div>'+
+ '<div class="method-home-proof"><span>8 PHASES</span><span>'+ALL_STEPS.length+' ACTIONABLE STEPS</span><span>NO LOGIN REQUIRED</span></div></div>'+
+ '<div class="method-home-plan"><div class="method-home-plan-head"><span>BIZZINTEL / THE METHOD</span><span>ROADMAP 001</span></div>'+
+ '<div class="method-home-plan-title">Your first<br>four moves.</div>'+
+ '<ol>'+PATH[0].steps.map((s,i)=>'<li><span>'+String(i+1).padStart(2,"0")+'</span><a href="/method/capture/'+esc(s.id)+'/">'+esc(s.title)+' '+icons.arrow+'</a></li>').join("")+'</ol>'+
+ '<a href="/method/capture/project/" class="method-home-plan-link">Get the first action '+icons.arrow+'</a></div></div></section>';
+ const starter='<section class="method-home-start"><div class="wrap"><div class="section-heading"><div>'+label("START WHERE YOU ARE")+
+ '<h2>Pick your current position.</h2><p>Every phase is available. Start with the one that solves your immediate problem.</p></div></div>'+
+ '<div class="method-start-cards">'+[
+  ["I'm working on an idea","Put the full story into ChatGPT, set the rules and test whether people need it.","/method/capture/project/","01"],
+  ["I need to look professional","Choose the name, domain, SEO, business profiles and a website that works.","/method/presence/","05"],
+  ["I need more customers","Choose the right ads, build partner channels and track actual bookings.","/method/customers/","07"]
+ ].map(x=>'<a href="'+x[2]+'" class="method-start-card"><span>'+x[3]+' / ENTRY POINT</span><h3>'+x[0]+'</h3><p>'+x[1]+'</p><b>'+icons.arrow+'</b></a>').join("")+'</div></div></section>';
+ const journey='<section class="method-home-journey"><div class="wrap"><div class="section-heading"><div>'+label("THE FULL PLAYBOOK")+
+ '<h2>Follow the sequence. Skip the guesswork.</h2><p>Eight decisions to make, with specific instructions and real outputs—not a wall of generic advice.</p></div>'+
+ link("/method/","Explore the complete path "+icons.arrow,"inline-link")+'</div>'+
+ '<div class="method-home-list">'+PATH.map((p,i)=>'<a href="/method/'+p.id+'/" class="method-home-phase"><span>'+p.number+'</span><div><strong>'+esc(p.name)+'</strong><p>'+esc(p.result)+'</p></div><span class="method-home-phase-action">'+p.steps.length+' steps '+icons.arrow+'</span></a>').join("")+'</div></div></section>';
+ const note='<section class="method-home-belief"><div class="wrap"><div>'+label("WHY IT WORKS")+
+ '<h2>Use AI for the work.<br><em>Use judgment for the decisions.</em></h2>'+
+ '<p>ChatGPT helps you write, compare, organize and prototype. It cannot replace real customer evidence, tested margins or safe operations. Every phase ends with a deliverable and a decision to make.</p></div>'+
+ '<a class="button primary" href="/method/capture/project/">Create your first project '+icons.arrow+'</a></div></section>'+
+ '<section class="founder-band"><div class="wrap founder-band-inner"><div>'+label("BUILT FROM REAL BUSINESS WORK")+
+ '<h2>From Bahamas AI Solutions.</h2><p>A practical entrepreneurship learning resource shaped by Amar Pearson’s work across websites, service operations and digital products. Illustrative examples are not claims of customer results.</p></div>'+
+ '<a href="https://bahamasaisolutions.com/" class="inline-link">About the founder '+icons.arrow+'</a></div></section>';
+ return layout({path:"/",heading:"BizzIntel",description:"Follow Amar Pearson’s practical business-building method: ChatGPT Project setup, research, market testing, prototype website, financial feasibility, branding, SEO, secure site, customer ads, partnerships and scaling.",body:intro+starter+journey+note});
 }
 function guidesIndex(){
  const intro='<section class="page-top"><div class="wrap">'+label("THE COMPLETE GUIDE LIBRARY")+
@@ -180,28 +170,23 @@ function guidePage(p){
  sections+bottom+'</div>'+toc+'</div>'});
 }
 function startHere(){
- const sections=[
- {id:"idea",name:"I have a business idea",subtitle:"Before you spend much money, check that the opportunity is real.",steps:[
- ["Define the customer problem","ideation","problem"],["Find the root cause","ideation","root-cause"],["Check real demand","ideation","demand-test"],["Make the decision","ideation","decision"]]},
- {id:"setup",name:"I am setting up the business",subtitle:"Turn the idea into an offer customers can discover and buy.",steps:[
- ["Build the offer","planning","single-offer"],["Work through pricing and costs","planning","economics"],["Get your digital identity in place","planning","digital"],["Check Google visibility","gbp","0"],["Prepare your first content","social","5"]]},
- {id:"operating",name:"I am already running a business",subtitle:"Get organized, improve the customer journey and measure what's working.",steps:[
- ["Find the next marketing experiment","marketing","0"],["Improve the website journey","website","0"],["Document the repeatable process","automations","1"],["Run a weekly review","weekly","0"],["Check relevant funding opportunities","opportunities","2"]]}
+ const cards=[
+  {title:"I just have an idea",desc:"Set up the ChatGPT Project, tell the full story and build your quality standards.",href:"/method/capture/project/",tag:"FIRST STEP"},
+  {title:"I need to know if it will work",desc:"Compare global, Caribbean and local competitors and test demand.",href:"/method/research/",tag:"MARKET TEST"},
+  {title:"I need a website to show the concept",desc:"Sketch the offer and create a shareable visual preview before building the full business.",href:"/method/visualize/",tag:"PROTOTYPE"},
+  {title:"I need to know if it makes money",desc:"Calculate real margins, funding fit, national impact and expansion potential.",href:"/method/economics/",tag:"FEASIBILITY"},
+  {title:"I'm ready to look professional",desc:"Set up name, domain, SEO, Google Business Profile where eligible and useful social accounts.",href:"/method/presence/",tag:"DIGITAL SETUP"},
+  {title:"I need a real website and CRM",desc:"Build only the features you need, then test SEO, security and lead workflows.",href:"/method/website/",tag:"SYSTEMS"},
+  {title:"I need customers and partners",desc:"Choose Google or Meta based on intent, make one measured campaign and approach partners.",href:"/method/customers/",tag:"ACQUISITION"},
+  {title:"I'm expanding",desc:"Review operations, automate bottlenecks and test one new market or channel.",href:"/method/grow/",tag:"GROWTH"}
  ];
- const content='<section class="page-top start-top"><div class="wrap">'+label("START HERE / CHOOSE YOUR STAGE")+
-  '<h1>Not sure where to begin?<br><em>Start where you are.</em></h1>'+
-  '<p>You do not need to finish every tutorial in order. Choose what describes you best and begin with the most useful next exercise.</p>'+
-  '<div class="stage-jump">'+sections.map(s=>link("#"+s.id,esc(s.name)+icons.arrow,"jump-button")).join("")+'</div></div></section>'+
-  '<div class="wrap stage-content">'+sections.map((s,i)=>'<section class="stage-section" id="'+s.id+'"><div class="stage-section-head"><div class="stage-big">'+number(i+1)+'</div>'+
-  '<div>'+label("BUSINESS STAGE")+'<h2>'+esc(s.name)+'</h2><p>'+esc(s.subtitle)+'</p></div></div><ol class="stage-steps">'+s.steps.map(([name,module,ref],j)=>{
-   const p=PLAYBOOKS.find(x=>x.id===module);
-   const step=ref.match(/^\d+$/)?p.steps[Number(ref)]:p.steps.find(x=>x.id===ref);
-   return '<li><span>'+number(j+1)+'</span><div><strong>'+esc(name)+'</strong><p>'+esc(step?.output||"Complete the lesson.")+'</p></div>'+
-    link("/guides/"+module+"/#"+(step?.id||""),"Read lesson "+icons.arrow,"inline-link")+'</li>';
-  }).join("")+'</ol></section>').join("")+'</div>'+
-  '<section class="final-cta"><div class="wrap final-inner">'+label("THE FULL LIBRARY")+
-  '<h2>Need something else?</h2><p>All ten guides are open. Find the one that solves your immediate problem.</p>'+btn("/guides/","Browse all business guides")+'</div></section>';
- return layout({path:"/start-here/",heading:"Where to start",description:"Choose your business stage and find the right free business tutorials for idea validation, setup, launch and operations.",body:content});
+ const content='<section class="page-top"><div class="wrap">'+label("NO QUIZ / NO LOGIN / JUST THE NEXT RIGHT STEP")+
+ '<h1>Where are you<br><em>in the process?</em></h1>'+
+ '<p>Choose your immediate situation and open the relevant phase. You will see exactly what to do, what prompt to use and what your result should be.</p></div></section>'+
+ '<section class="method-stage-entry"><div class="wrap"><div class="method-stage-grid">'+cards.map(c=>'<a href="'+c.href+'" class="method-stage-card">'+
+ '<span>'+esc(c.tag)+'</span><h2>'+esc(c.title)+'</h2><p>'+esc(c.desc)+'</p><strong>Open this step '+icons.arrow+'</strong></a>').join("")+
+ '</div><div class="method-stage-footer">'+link("/method/","See the whole method "+icons.arrow,"inline-link")+'</div></div></section>';
+ return layout({path:"/start-here/",heading:"Find your next step",description:"Find the exact action to take in the BizzIntel Method for your current business situation, from idea to growth.",body:content});
 }
 function resourcesPage(){
  const blocks=[...new Set(resources.map(x=>x.group))].map(group=>'<section class="resource-group"><h2>'+esc(group)+'</h2><div class="resource-list">'+
@@ -226,6 +211,7 @@ function aboutPage(){
  '<div><span>04</span><h3>Keep improving</h3><p>Use actual customer and business results to choose the next step.</p></div></div></div></section>';
  return layout({path:"/about/",heading:"About BizzIntel",description:"Why BizzIntel publishes practical business guides for Bahamian and Caribbean entrepreneurs, by Bahamas AI Solutions.",body:content});
 }
+const methodPages=createMethodPages({PATH,ALL_STEPS,stepHref,phaseHref,nextStep,previousStep,layout,esc,label,link,icons});
 async function emit(path,content){
  const where=OUT+(path==="/"?"/index.html":path+"index.html");
  await mkdir(where.slice(0,where.lastIndexOf("/")),{recursive:true});
@@ -239,10 +225,12 @@ await emit("/guides/",guidesIndex());
 await emit("/start-here/",startHere());
 await emit("/resources/",resourcesPage());
 await emit("/about/",aboutPage());
+await emit("/method/",methodPages.index());
+for(const phase of PATH){await emit(phaseHref(phase),methodPages.phasePage(phase));for(const [index,step] of phase.steps.entries())await emit(stepHref({...step,phaseId:phase.id}),methodPages.stepPage(phase,step,index));}
 for(const p of PLAYBOOKS)await emit("/guides/"+p.id+"/",guidePage(p));
-const routes=["/","/guides/","/start-here/","/resources/","/about/",...PLAYBOOKS.map(p=>"/guides/"+p.id+"/")];
+const routes=["/","/guides/","/start-here/","/resources/","/about/",...PLAYBOOKS.map(p=>"/guides/"+p.id+"/"),"/method/",...PATH.map(phaseHref),...ALL_STEPS.map(stepHref)];
 await writeFile(OUT+"/robots.txt",published?"User-agent: *\nAllow: /\n"+(BASE?"Sitemap: "+BASE+"/sitemap.xml\n":""):"User-agent: *\nDisallow: /\n");
 if(BASE&&published){
  await writeFile(OUT+"/sitemap.xml",'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+routes.map(p=>'<url><loc>'+esc(BASE+p)+'</loc></url>').join("")+'</urlset>');
 }
-console.log("BizzIntel: built "+routes.length+" static public pages, "+PLAYBOOKS.length+" guides, "+total+" lessons. Indexing: "+(published?"enabled":"disabled pending review")+".");
+console.log("BizzIntel: built "+routes.length+" static pages, "+PATH.length+" method phases, "+ALL_STEPS.length+" actions, "+PLAYBOOKS.length+" reference guides. Indexing: "+(published?"enabled":"disabled pending review")+".");
