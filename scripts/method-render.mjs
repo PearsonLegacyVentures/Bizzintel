@@ -15,7 +15,7 @@ export function createMethodPages({PATH,ALL_STEPS,stepHref,phaseHref,nextStep,pr
  const phaseCards=PATH.map((phase,i)=>{
   const starting=phase.steps[0];
   return '<article class="method-phase-card" id="phase-'+esc(phase.id)+'" data-method-phase="'+esc(phase.id)+'">'+
-   '<div class="method-phase-card-top"><span class="method-number">'+phase.number+'</span><span class="method-pct" data-progress-phase="'+esc(phase.id)+'">0 / '+phase.steps.length+' complete</span></div>'+
+   '<div class="method-phase-card-top"><span class="method-number">'+phase.number+'</span><span class="method-pct" data-progress-phase="'+esc(phase.id)+'" data-progress-keys="'+esc(phase.steps.map(st=>phase.id+"/"+st.id).join(","))+'">0 / '+phase.steps.length+' complete</span></div>'+
    '<p class="method-tag">'+sanitize(phase.tag)+'</p><h3>'+sanitize(phase.name)+'</h3>'+
    '<p>'+sanitize(phase.subtitle)+'</p>'+
    '<div class="method-phase-steps">'+phase.steps.map((s,index)=>
@@ -53,7 +53,7 @@ export function createMethodPages({PATH,ALL_STEPS,stepHref,phaseHref,nextStep,pr
    '<span>BEFORE YOU MOVE FORWARD</span><p>'+sanitize(phase.gate)+'</p></div></div></div></section>'+
    '<section class="phase-body"><div class="wrap">'+
    '<div class="phase-step-top"><div>'+label("THE ACTION PLAN")+'<h2>Do these '+phase.steps.length+' things.</h2></div>'+
-   '<span data-progress-phase="'+esc(phase.id)+'">0 / '+phase.steps.length+' complete</span></div>'+
+   '<span data-progress-phase="'+esc(phase.id)+'" data-progress-keys="'+esc(phase.steps.map(st=>phase.id+"/"+st.id).join(","))+'">0 / '+phase.steps.length+' complete</span></div>'+
    '<div class="phase-step-list">'+phase.steps.map((step,index)=>{
     const destination=stepHref({...step,phaseId:phase.id});
     return '<a class="phase-step-row" href="'+destination+'"><span class="phase-step-count">'+String(index+1).padStart(2,"0")+'</span>'+
@@ -101,7 +101,7 @@ export function createMethodPages({PATH,ALL_STEPS,stepHref,phaseHref,nextStep,pr
    '<div class="method-prev-next">'+(prior?link(stepHref(prior),"← Previous action","step-prev"):link("/method/","← All phases","step-prev"))+
    (next?link(stepHref(next),"Next action "+arrow,"step-next"):link("/method/","Finish the method "+arrow,"step-next"))+'</div></article>'+
    '<aside class="single-step-side"><div class="sticky-step-nav">'+
-   '<div class="step-nav-head"><span>PHASE '+phase.number+'</span><strong>'+sanitize(phase.name)+'</strong><small data-progress-phase="'+phase.id+'">0 / '+phase.steps.length+' complete</small></div>'+
+   '<div class="step-nav-head"><span>PHASE '+phase.number+'</span><strong>'+sanitize(phase.name)+'</strong><small data-progress-phase="'+phase.id+'" data-progress-keys="'+esc(phase.steps.map(st=>phase.id+"/"+st.id).join(","))+'">0 / '+phase.steps.length+' complete</small></div>'+
    '<nav aria-label="Steps in this phase">'+phase.steps.map((s,i)=>'<a href="'+stepHref({...s,phaseId:phase.id})+'" class="'+(s.id===step.id?"selected":"")+'"><span class="step-nav-num">'+String(i+1).padStart(2,"0")+'</span>'+
    '<span>'+sanitize(s.title)+'</span><i data-method-completion="'+esc(phase.id+"/"+s.id)+'" aria-hidden="true"></i></a>').join("")+'</nav>'+
    '<a href="'+phaseHref(phase)+'">View phase overview ↗</a></div></aside></div>';
