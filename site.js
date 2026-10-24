@@ -93,3 +93,47 @@ if(tocLinks.length&&"IntersectionObserver" in window){
  },{rootMargin:"-15% 0px -65% 0px",threshold:0});
  $$(".lesson[id]").forEach(section=>observer.observe(section));
 }
+
+
+/* Method pages: optional device-local progress and visible copy controls.
+   Site content remains fully accessible if local storage or JS is blocked. */
+const METHOD_KEY="bizzintel-method-progress-v1";
+function methodData(){
+ try{const value=JSON.parse(localStorage.getItem(METHOD_KEY)||"{}");return value&&typeof value==="object"?value:{}}catch{return {}}
+}
+function methodSave(value){
+ try{localStorage.setItem(METHOD_KEY,JSON.stringify(value));return true}catch{return false}
+}
+function methodRefresh(){
+ const data=methodData();
+ $$("[data-progress-phase]").forEach(el=>{
+  const phase=el.getAttribute("data-progress-phase");
+  const steps=$$('[data-method-completion^="'+phase+'/"]');
+  if(steps.length){
+   const count=steps.filter(node=>data[node.getAttribute("data-method-completion")]).length;
+   el.textContent=count+" / "+steps.length+" complete";
+  }
+ });
+ $$("[data-method-completion]").forEach(el=>{
+  const done=Boolean(data[el.getAttribute("data-method-completion")]);
+  el.classList.toggle("done",done);
+ });
+ $$("[data-mark-method]").forEach(button=>{
+  const done=Boolean(data[button.getAttribute("data-mark-method")]);
+  button.setAttribute("aria-pressed",String(done));
+  button.textContent=done?"Completed ✓ · Reopen":"Mark this step done ✓";
+ });
+}
+$$("[data-copy-text]").forEach(button=>button.addEventListener("click",()=>{
+ const element=document.getElementById(button.getAttribute("data-copy-text"));
+ if(element)copyText(element.textContent||"");
+}));
+$$("[data-mark-method]").forEach(button=>button.addEventListener("click",()=>{
+ const key=button.getAttribute("data-mark-method");
+ const data=methodData();
+ if(data[key])delete data[key];else data[key]=true;
+ const saved=methodSave(data);
+ methodRefresh();
+ toast(saved?(data[key]?"Marked complete on this device.":"Step reopened."):"Progress cannot be saved in this browser.");
+}));
+methodRefresh();
