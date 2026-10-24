@@ -4,6 +4,7 @@ import {execFileSync} from "node:child_process";
 import {readFile,stat} from "node:fs/promises";
 import {resolve,join} from "node:path";
 import {PLAYBOOKS} from "../src/playbooks.js";
+import {PATH,ALL_STEPS,phaseHref,stepHref,nextStep} from "../src/method.js";
 
 const root=resolve(".");
 const dist=resolve(root,"dist");
@@ -16,11 +17,11 @@ function localTarget(href){
  if(path.endsWith("/"))return join(dist,path,"index.html");
  return join(dist,path);
 }
-test("static build publishes 15 standalone public HTML pages",async()=>{
+test("static build publishes 56 standalone public HTML pages",async()=>{
  const output=execFileSync(process.execPath,["scripts/build.mjs"],{encoding:"utf8",env:{...process.env,PUBLIC_INDEXING:"false",SITE_URL:""}});
- assert.match(output,/15 static public pages/);
- const routes=["/","/guides/","/start-here/","/resources/","/about/",...PLAYBOOKS.map(p=>"/guides/"+p.id+"/")];
- assert.equal(routes.length,15);
+ assert.match(output,/56 static pages/);
+ const routes=["/","/guides/","/start-here/","/resources/","/about/",...PLAYBOOKS.map(p=>"/guides/"+p.id+"/"),"/method/",...PATH.map(phaseHref),...ALL_STEPS.map(stepHref)];
+ assert.equal(routes.length,56);
  for(const route of routes){
   const path=localTarget(route),html=await readFile(path,"utf8");
   assert.match(html,/<!doctype html>/i);
@@ -59,14 +60,55 @@ test("every local internal link resolves to generated page or asset",async()=>{
 });
 test("homepage is content-first and links directly into business tutorials",async()=>{
  const html=await readFile(join(dist,"index.html"),"utf8");
- assert.match(html,/Build a business/);
- assert.match(html,/No login\. No paywall\./);
- assert.match(html,/href="\/guides\/ideation\/"/);
- assert.match(html,/href="\/start-here\/"/);
+ assert.match(html,/Here is how/);
+ assert.match(html,/NO LOGIN REQUIRED/);
+ assert.match(html,/href="\/method\/capture\/project\/"/);
+ assert.match(html,/href="\/method\/"/);
  assert.doesNotMatch(html,/supabase|\/src\/app\.js|id="auth-form"|data-action="signout"/i);
 });
 test("unapproved work is not indexed until publication is explicitly enabled",async()=>{
  const html=await readFile(join(dist,"index.html"),"utf8");
  assert.match(html,/noindex,nofollow/);
  assert.match(await readFile(join(dist,"robots.txt"),"utf8"),/Disallow: \//);
+});
+
+test("all method pages offer a concrete action, prompt, deliverable and next step",async()=>{
+ assert.equal(PATH.length,8);
+ assert.equal(ALL_STEPS.length,32);
+ const keys=new Set();
+ for(const phase of PATH){
+  const html=await readFile(localTarget(phaseHref(phase)),"utf8");
+  assert.match(html,/WHAT YOU WILL HAVE AT THE END/);
+  assert.match(html,/Gate to move forward/);
+  for(const step of phase.steps){
+   const key=phase.id+"/"+step.id;
+   assert.ok(!keys.has(key),"duplicate step key "+key);
+   keys.add(key);
+   assert.ok(step.actions.length>=3,"missing instructions "+key);
+   assert.ok(step.check.length>=3,"missing acceptance checks "+key);
+   const lesson=await readFile(localTarget(stepHref({...step,phaseId:phase.id})),"utf8");
+   assert.match(lesson,/Do this now/);
+   assert.match(lesson,/Copy this into ChatGPT/);
+   assert.match(lesson,/Finish with this/);
+   assert.match(lesson,/data-mark-method/);
+   assert.match(lesson,/READY-TO-USE PROMPT/);
+  }
+ }
+ assert.equal(keys.size,32);
+ assert.equal(nextStep("grow","library"),null);
+});
+test("first method action sets up a ChatGPT Project with quality standards",async()=>{
+ const html=await readFile(localTarget("/method/capture/project/"),"utf8");
+ assert.match(html,/ChatGPT Project/);
+ assert.match(html,/Business Source of Truth/);
+ assert.match(html,/quality rules|quality standards|confirmed facts/i);
+});
+test("strategy pages contain linked official references for GBP, SEO, chamber and Toastmasters",async()=>{
+ const references=[
+ ["/method/presence/gbp/","support.google.com/business/answer/13763036"],
+ ["/method/presence/seo/","developers.google.com/search/docs/fundamentals/seo-starter-guide"],
+ ["/method/customers/network/","thebahamaschamber.com"],
+ ["/method/customers/network/","toastmasters.org/find-a-club"]
+ ];
+ for(const [path,url] of references)assert.ok((await readFile(localTarget(path),"utf8")).includes(url),path+" missing "+url);
 });
