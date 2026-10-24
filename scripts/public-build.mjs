@@ -45,19 +45,47 @@ function layout({path,heading,description,body,type="website",schema}){
   '<button type="button" class="menu-toggle" aria-expanded="false" aria-controls="main-navigation" aria-label="Open navigation"><span></span><span></span></button>'+
   '<nav id="main-navigation" class="nav-links" aria-label="Main navigation">'+navItems.map(([href,text])=>link(href,esc(text),path===href?"active":"")).join("")+'</nav>'+
   '<a href="/method/" class="top-action">Start the method '+icons.arrow+'</a></div></header>';
+
+ const desktop='<div class="retro-desktop-shortcuts" aria-label="Desktop shortcuts">'+
+ '<a href="/" class="retro-shortcut"><span class="retro-icon retro-computer" aria-hidden="true"><span></span></span><span>BizzIntel</span></a>'+
+ '<a href="/method/" class="retro-shortcut"><span class="retro-icon retro-folder" aria-hidden="true"></span><span>Start Here</span></a>'+
+ '<a href="/guides/" class="retro-shortcut"><span class="retro-icon retro-document" aria-hidden="true"></span><span>Guides</span></a>'+
+ '<a href="/resources/" class="retro-shortcut"><span class="retro-icon retro-folder" aria-hidden="true"></span><span>Resources</span></a></div>';
+ const chrome='<div class="retro-titlebar"><span class="retro-titlebar-name"><span class="retro-title-icon" aria-hidden="true">BI</span>BizzIntel — '+esc(heading)+'</span>'+
+ '<div class="retro-window-controls"><button type="button" data-window-minimize aria-label="Minimize BizzIntel window" title="Minimize">_</button>'+
+ '<button type="button" data-window-maximize aria-label="Maximize BizzIntel window" title="Maximize">□</button>'+
+ '<button type="button" data-window-close aria-label="Close BizzIntel window" title="Close">×</button></div></div>'+
+ '<nav class="retro-menu-bar" aria-label="Window menu"><a href="/">File</a><a href="/method/">Method</a><a href="/guides/">Guides</a><a href="/resources/">Resources</a><a href="/about/">Help</a></nav>'+
+ '<div class="retro-location-bar"><span>Address</span><span class="retro-location-field"><span class="retro-mini-icon" aria-hidden="true">▣</span> C:\\BizzIntel'+esc(path.replaceAll("/", "\\"))+'</span>'+
+ '<a href="/method/" class="retro-go" title="Open the learning method">Go ↗</a></div>';
+ const startMenu='<nav class="retro-start-menu" id="retro-start-menu" hidden aria-label="Start menu">'+
+ '<div class="retro-start-rail" aria-hidden="true">BizzIntel<span>98</span></div>'+
+ '<div class="retro-start-items"><a href="/"><span class="retro-menu-symbol">▣</span>Desktop <b>›</b></a>'+
+ '<a href="/method/capture/project/"><span class="retro-menu-symbol">✎</span>Start the business method <b>›</b></a>'+
+ '<a href="/method/"><span class="retro-menu-symbol">▤</span>All 8 phases <b>›</b></a>'+
+ '<a href="/guides/"><span class="retro-menu-symbol">▧</span>Guides <b>›</b></a>'+
+ '<a href="/resources/"><span class="retro-menu-symbol">▣</span>Resources <b>›</b></a>'+
+ '<div class="retro-start-separator"></div><a href="/about/"><span class="retro-menu-symbol">ⓘ</span>About BizzIntel</a></div></nav>';
+ const taskbar='<div class="retro-taskbar" role="toolbar" aria-label="Desktop taskbar">'+
+ '<button type="button" id="retro-start-button" class="retro-start-button" aria-expanded="false" aria-controls="retro-start-menu"><span class="retro-start-mark" aria-hidden="true">▦</span><strong>Start</strong></button>'+
+ '<button type="button" class="retro-task-window" data-window-restore title="Show BizzIntel"><span class="retro-tiny-application" aria-hidden="true">BI</span><span>BizzIntel — Business Builder</span></button>'+
+ '<div class="retro-task-clock" id="retro-task-clock" aria-label="Your device local time">--:--</div></div>';
  const footer='<footer class="site-footer"><div class="wrap footer-main"><div class="footer-brand">'+mark+
   '<p>Plain-language guides to help you turn an idea into a real business and keep improving it.</p></div>'+
   '<div class="footer-links"><div><strong>Learn</strong>'+link("/method/","Follow the method")+link("/start-here/","Choose your stage")+link("/guides/","Deep-dive guides")+link("/resources/","Useful resources")+'</div>'+
   '<div><strong>About</strong>'+link("/about/","Our approach")+link("https://bahamasaisolutions.com/","Bahamas AI Solutions")+'</div></div></div>'+
   '<div class="wrap footer-bottom"><span>© '+new Date().getUTCFullYear()+' BizzIntel · A Bahamas AI Solutions project</span><span>Learn the process. Do the work.</span></div></footer>';
  return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
-  '<meta name="theme-color" content="#0b1114"><meta name="description" content="'+esc(description)+'">'+
+  '<meta name="theme-color" content="#008080"><meta name="description" content="'+esc(description)+'">'+
   '<meta name="robots" content="'+(published?"index,follow":"noindex,nofollow")+'">'+
   '<meta property="og:type" content="'+(type==="article"?"article":"website")+'"><meta property="og:title" content="'+esc(fullTitle)+'">'+
   '<meta property="og:description" content="'+esc(description)+'"><meta property="og:site_name" content="BizzIntel">'+
   '<title>'+esc(fullTitle)+'</title><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="stylesheet" href="/styles.css">'+
-  canonical(path)+metadata+'</head><body><a class="skip-link" href="#main">Skip to content</a>'+nav+'<main id="main">'+body+'</main>'+footer+
-  '<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div><script defer src="/site.js"></script></body></html>';
+  canonical(path)+metadata+'</head><body class="retro-theme"><a class="skip-link" href="#main">Skip to content</a>'+
+ desktop+'<div class="retro-window" id="retro-main-window">'+chrome+nav+'<main id="main">'+body+'</main>'+footer+
+ '<div class="retro-statusbar"><span>Ready · BizzIntel Business Learning</span><span>8 phases · 32 actions</span></div></div>'+
+ startMenu+taskbar+'<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>'+
+ '<script defer src="/site.js"></script></body></html>';
 }
 const label=(text,variant="")=>'<span class="eyebrow '+variant+'">'+esc(text)+'</span>';
 const btn=(href,text,kind="primary")=>link(href,esc(text)+icons.arrow,"button "+kind);
