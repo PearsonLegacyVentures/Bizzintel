@@ -138,3 +138,51 @@ $$("[data-mark-method]").forEach(button=>button.addEventListener("click",()=>{
  toast(saved?(data[key]?"Marked complete on this device.":"Step reopened."):"Progress cannot be saved in this browser.");
 }));
 methodRefresh();
+
+
+/* Windows 98-inspired interface controls — real behavior, no decorative dead buttons. */
+const desktopWindow=document.getElementById("retro-main-window");
+const startButton=document.getElementById("retro-start-button");
+const startMenu=document.getElementById("retro-start-menu");
+const taskWindow=document.querySelector("[data-window-restore]");
+const desktopLinks=[...document.querySelectorAll(".retro-shortcut")];
+const toggleStart=(open)=>{
+ if(!startButton||!startMenu)return;
+ const shouldOpen=Boolean(open);
+ startMenu.hidden=!shouldOpen;
+ startButton.setAttribute("aria-expanded",String(shouldOpen));
+ startButton.classList.toggle("is-open",shouldOpen);
+ if(shouldOpen)startMenu.querySelector("a")?.focus();
+};
+startButton?.addEventListener("click",()=>toggleStart(startMenu?.hidden));
+function setWindowState(state){
+ document.body.classList.toggle("retro-window-hidden",state==="hidden");
+ if(state==="hidden"){taskWindow?.setAttribute("aria-pressed","false");taskWindow?.focus();}
+ else {taskWindow?.setAttribute("aria-pressed","true");document.querySelector(".retro-titlebar-name")?.focus();}
+ toggleStart(false);
+}
+document.querySelector("[data-window-minimize]")?.addEventListener("click",()=>setWindowState("hidden"));
+document.querySelector("[data-window-close]")?.addEventListener("click",()=>setWindowState("hidden"));
+taskWindow?.addEventListener("click",()=>setWindowState(document.body.classList.contains("retro-window-hidden")?"visible":"hidden"));
+document.querySelector("[data-window-maximize]")?.addEventListener("click",()=>{
+ document.body.classList.remove("retro-window-hidden");
+ document.body.classList.toggle("retro-window-maximized");
+ document.querySelector("[data-window-maximize]")?.setAttribute("aria-label",document.body.classList.contains("retro-window-maximized")?"Restore window size":"Maximize window");
+});
+desktopLinks.forEach(link=>link.addEventListener("keydown",event=>{
+ if(event.key==="Enter"||event.key===" "){if(event.key===" ")event.preventDefault();if(event.key===" ")link.click();}
+}));
+document.addEventListener("pointerdown",event=>{
+ if(startMenu&&!startMenu.hidden&&!startMenu.contains(event.target)&&!startButton?.contains(event.target))toggleStart(false);
+});
+document.addEventListener("keydown",event=>{
+ if(event.key==="Escape"&&startMenu&&!startMenu.hidden){toggleStart(false);startButton?.focus();}
+});
+const retroClock=document.getElementById("retro-task-clock");
+function paintClock(){
+ if(!retroClock)return;
+ retroClock.textContent=new Intl.DateTimeFormat(undefined,{hour:"numeric",minute:"2-digit"}).format(new Date());
+ retroClock.title=new Intl.DateTimeFormat(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"}).format(new Date());
+}
+paintClock();
+if(retroClock)setInterval(paintClock,60*1000);

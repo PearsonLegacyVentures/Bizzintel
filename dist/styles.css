@@ -517,3 +517,281 @@ p{line-height:1.72}
  .method-prev-next{flex-wrap:wrap}
  .step-next{max-width:100%;padding:12px}
 }
+
+
+/* ================================================================
+   BIZZINTEL 98 — a Windows 98-inspired functional business desktop
+   Accessible responsive homage using native CSS, no borrowed assets.
+   ================================================================ */
+:root{
+ --ink:#181818;--ink2:#414141;--ink3:#565656;--paper:#f5f5f5;
+ --white:#fff;--soft:#e8e8e8;--border:#808080;--text:#161616;
+ --muted:#454545;--gray:#c0c0c0;--lime:#ffffe1;--accent:#000080;
+ --display:Tahoma,"MS Sans Serif",Verdana,Arial,sans-serif;
+ --wrap:1140px;
+}
+body.retro-theme{background:#008080;color:#111;font-family:var(--display);font-size:14px;line-height:1.54;padding-bottom:42px;min-width:300px}
+.retro-theme h1,.retro-theme h2,.retro-theme h3{font-family:var(--display);letter-spacing:-.035em}
+.retro-theme a,.retro-theme button{transition:none}
+.retro-theme a:hover,.retro-theme button:hover{transform:none}
+.retro-theme :focus-visible{outline:2px dotted #000;outline-offset:2px}
+.retro-theme svg{stroke-linejoin:miter;stroke-linecap:square}
+.retro-theme .eyebrow,.retro-theme .method-tag,.retro-theme .step-nav-head>span{color:#000080;font-weight:800}
+.retro-theme .wrap{max-width:var(--wrap)}
+/* Desktop icons */
+.retro-desktop-shortcuts{position:absolute;left:12px;top:25px;z-index:1;width:102px;display:flex;flex-direction:column;gap:17px;align-items:center}
+.retro-shortcut{display:flex;min-height:90px;width:92px;flex-direction:column;justify-content:flex-start;align-items:center;gap:9px;color:#fff;font:12px/1.25 Tahoma,Verdana,sans-serif;text-align:center;text-shadow:1px 1px #002f36;padding:4px 3px}
+.retro-shortcut:hover,.retro-shortcut:focus-visible{background:#00008077;color:#fff;outline:1px dotted #fff}
+.retro-shortcut>span:last-child{max-width:90px}
+.retro-icon{display:block;position:relative;width:42px;height:34px}
+.retro-icon.retro-folder:before{content:"";position:absolute;left:2px;top:10px;width:38px;height:25px;background:#f9d851;border:2px solid;border-color:#fff #5c4a00 #5c4a00 #fff;box-shadow:2px 2px #03272b}
+.retro-icon.retro-folder:after{content:"";position:absolute;left:5px;top:6px;width:17px;height:7px;background:#f8df66;border:2px solid;border-color:#fff #6d5700 transparent #fff}
+.retro-icon.retro-document:before{content:"";position:absolute;top:3px;left:8px;width:28px;height:34px;background:#f9f9f9;border:2px solid #1a2d51;box-shadow:2px 2px #022c36}
+.retro-icon.retro-document:after{content:"";position:absolute;top:11px;left:14px;width:17px;height:2px;background:#000080;box-shadow:0 7px #000080,0 14px #000080}
+.retro-icon.retro-computer:before{content:"";position:absolute;left:2px;top:1px;width:38px;height:29px;background:#c0c0c0;border:3px solid;border-color:#fff #424242 #424242 #fff;box-shadow:2px 2px #00333a}
+.retro-icon.retro-computer:after{content:"";position:absolute;left:7px;top:6px;width:28px;height:18px;background:#000080;border:2px inset #333;box-shadow:10px 26px 0 -6px #c0c0c0}
+/* Main window frame and title */
+.retro-window{position:relative;z-index:2;margin:22px 24px 57px auto;width:min(1370px,calc(100% - 153px));background:#c0c0c0;padding:3px;
+ border:2px solid;border-color:#fff #404040 #404040 #fff;box-shadow:inset 1px 1px #dfdfdf,inset -1px -1px #808080,2px 3px 0 #003c40b8;min-height:500px}
+.retro-window-hidden .retro-window{display:none}
+.retro-window-maximized .retro-window{margin:6px auto 57px;width:calc(100% - 12px)}
+.retro-titlebar{background:linear-gradient(90deg,#000080 0%,#084baa 58%,#1084d0 100%);min-height:34px;padding:3px 4px 3px 9px;display:flex;align-items:center;justify-content:space-between;gap:9px;color:#fff}
+.retro-titlebar-name{display:flex;gap:9px;align-items:center;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;font-size:13px;font-weight:800;line-height:1.3}
+.retro-title-icon,.retro-tiny-application{background:#fff;color:#000080;width:20px;height:19px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;font:800 9px Tahoma,Arial,sans-serif;border:1px outset #fff;box-shadow:inset -1px -1px #808080}
+.retro-window-controls{display:flex;gap:3px;flex-shrink:0}
+.retro-window-controls button{width:27px;height:24px;border:2px solid;border-color:#fff #404040 #404040 #fff;background:#c0c0c0;color:#000;padding:0;display:grid;place-items:center;line-height:1;font:bold 17px Tahoma,Arial,sans-serif;box-shadow:inset 1px 1px #e6e6e6}
+.retro-window-controls button:active{border-color:#404040 #fff #fff #404040;padding:2px 0 0 2px}
+.retro-menu-bar{display:flex;gap:1px;background:#c0c0c0;padding:3px 7px;align-items:center;min-height:30px}
+.retro-menu-bar a{padding:2px 10px;color:#000;font-size:12px}
+.retro-menu-bar a:hover{background:#000080;color:#fff}
+.retro-location-bar{display:flex;align-items:center;gap:7px;border-top:1px solid #808080;padding:6px 9px;background:#c0c0c0;color:#303030;font-size:12px}
+.retro-location-field{background:#fff;min-width:0;flex:1;display:flex;align-items:center;gap:9px;min-height:29px;padding:4px 7px;border:2px solid;border-color:#808080 #fff #fff #808080;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.retro-mini-icon{color:#000080}
+.retro-go{background:#c0c0c0;border:2px solid;border-color:#fff #404040 #404040 #fff;padding:5px 11px;font-weight:750;color:#111}
+.retro-go:active{border-color:#404040 #fff #fff #404040}
+.retro-statusbar{display:flex;justify-content:space-between;gap:6px;color:#3d3d3d;background:#c0c0c0;padding:6px 5px 4px;border-top:1px solid #8b8b8b;font-size:11px}
+.retro-statusbar span{flex:1;padding:3px 7px;border:1px solid;border-color:#808080 #fff #fff #808080}
+.retro-statusbar span:last-child{flex:0 0 auto}
+/* Toolbar adapted to the app frame */
+.retro-theme .site-header{position:relative;z-index:3;border-bottom:1px solid #808080;background:#c0c0c0;color:#000;box-shadow:0 1px #fff}
+.retro-theme .nav-wrap{height:55px;gap:15px}
+.retro-theme .brand{font-family:Tahoma,Arial,sans-serif;color:#000}
+.retro-theme .logo-box{background:#000080;color:#fff;border-radius:0;border:2px solid;border-color:#fff #333 #333 #fff;width:36px;height:34px;font-size:21px}
+.retro-theme .logo-box span{color:#d0d0ff}
+.retro-theme .logo-type{color:#0b0b0b;font-size:21px;letter-spacing:-.07em}
+.retro-theme .logo-type>span{color:#000080}
+.retro-theme .logo-type .dot{color:#000}
+.retro-theme .nav-links a{color:#191919;font:700 12px Tahoma,Arial,sans-serif;padding:8px 10px}
+.retro-theme .nav-links a:hover,.retro-theme .nav-links a.active{color:#fff;background:#000080}
+.retro-theme .top-action{background:#c0c0c0;color:#000080;padding:7px 10px;border:2px solid;border-color:#fff #555 #555 #fff;font-size:12px}
+.retro-theme .top-action:hover{background:#d6d6d6}
+.retro-theme .menu-toggle{background:#c0c0c0;border-radius:0;border:2px solid;border-color:#fff #555 #555 #fff}
+.retro-theme .menu-toggle span{background:#000}
+.retro-theme #main{background:#f6f6f6;min-height:65vh}
+.retro-theme .button,.retro-theme .jump-button{border-radius:0;box-shadow:none;font-weight:800}
+.retro-theme .button.primary{background:#000080;border:2px solid;border-color:#5c5cff #000040 #000040 #5c5cff;color:white}
+.retro-theme .button.primary:hover{background:#0f40a1}
+.retro-theme .button.secondary{background:#c0c0c0;border:2px solid;border-color:#fff #404040 #404040 #fff;color:#151515}
+.retro-theme .button.secondary:hover{background:#d8d8d8;color:#000}
+.retro-theme .inline-link{color:#000080;border-color:#000080}
+.retro-theme .eyebrow{letter-spacing:.08em}
+.retro-theme .method-tag{font-size:11px}
+/* Homepage desktop application */
+.retro-theme .method-home-hero{background:#e5e5e5;color:#111;border-bottom:3px double #9c9c9c}
+.retro-theme .method-home-grid{padding:75px 0}
+.retro-theme .method-home-copy>.eyebrow,.retro-theme .method-head .eyebrow,.retro-theme .method-phase-head .eyebrow,.retro-theme .single-step-top .eyebrow{color:#000080}
+.retro-theme .method-home-copy h1{font-size:clamp(44px,6vw,80px);color:#121212}
+.retro-theme .method-home-copy h1 em,.retro-theme .method-head h1 em,.retro-theme .method-home-belief h2 em{color:#000080;font-style:normal}
+.retro-theme .method-home-copy>p{color:#333;line-height:1.75}
+.retro-theme .method-home-proof,.retro-theme .method-hero-metrics{color:#454545}
+.retro-theme .method-home-plan{min-height:440px;background:#c0c0c0;border:3px solid;border-color:#fff #404040 #404040 #fff;border-radius:0;padding:6px;box-shadow:3px 4px 0 #5554}
+.retro-theme .method-home-plan:before{display:none}
+.retro-theme .method-home-plan-head{background:linear-gradient(90deg,#000080,#1084d0);padding:8px 11px;color:#fff;font-size:11px}
+.retro-theme .method-home-plan-title{color:#131313;font-size:clamp(33px,3.5vw,46px);margin:44px 18px 17px}
+.retro-theme .method-home-plan ol{margin:0 17px;background:#fff;border:2px solid;border-color:#808080 #fff #fff #808080;padding:4px 13px}
+.retro-theme .method-home-plan li{border-bottom:1px dotted #aaa}
+.retro-theme .method-home-plan li>span{color:#000080}
+.retro-theme .method-home-plan li a{color:#141414}
+.retro-theme .method-home-plan li a:hover{color:#000080;text-decoration:underline}
+.retro-theme .method-home-plan-link{margin:19px;color:#000080}
+.retro-theme .method-home-start{background:#f0f0f0}
+.retro-theme .method-home-journey{background:#e8e8e8}
+.retro-theme .method-start-card,.retro-theme .method-stage-card,.retro-theme .method-phase-card,.retro-theme .guide-card,.retro-theme .path-card{background:#fff;border:2px solid;border-color:#fff #808080 #808080 #fff;border-radius:0;box-shadow:2px 2px 0 #c3c3c3}
+.retro-theme .method-start-card:hover,.retro-theme .method-stage-card:hover,.retro-theme .method-phase-card:hover,.retro-theme .guide-card:hover{border-color:#000080;box-shadow:3px 3px 0 #00008044}
+.retro-theme .method-start-card>span,.retro-theme .method-stage-card>span,.retro-theme .method-number,.retro-theme .method-phase-card-top,.retro-theme .method-pct{color:#000080}
+.retro-theme .method-home-phase{border-bottom:1px solid #a0a0a0}
+.retro-theme .method-home-phase>span:first-child{color:#666}
+.retro-theme .method-home-phase-action{color:#000080}
+.retro-theme .method-home-belief{background:#000080;color:#fff;border-top:4px solid #b9b9ff;border-bottom:4px solid #00003d}
+.retro-theme .method-home-belief h2,.retro-theme .method-home-belief h2 em{color:#fff}
+.retro-theme .method-home-belief p{color:#e3e3ff}
+.retro-theme .method-home-belief .button.primary{background:#c0c0c0;color:#000}
+.retro-theme .founder-band{background:#e4e4e4}
+.retro-theme .method-head,.retro-theme .method-phase-head,.retro-theme .single-step-top{background:#e5e5e5;color:#111}
+.retro-theme .method-head h1,.retro-theme .method-phase-head h1,.retro-theme .single-step-top h1{color:#121212}
+.retro-theme .method-head-grid>div>p,.retro-theme .phase-head-inner>div>p,.retro-theme .single-step-top-grid>div>p{color:#424242}
+.retro-theme .method-mini-docket,.retro-theme .phase-side,.retro-theme .step-timing{background:#c0c0c0;border:2px solid;border-color:#fff #404040 #404040 #fff;color:#111;border-radius:0}
+.retro-theme .method-mini-top{background:linear-gradient(90deg,#000080,#1084d0);padding:8px;color:#fff}
+.retro-theme .method-mini-docket>strong{color:#111}
+.retro-theme .method-mini-docket li{color:#222;border-bottom:1px dotted #888}
+.retro-theme .method-mini-docket li:before,.retro-theme .method-mini-docket>a{color:#000080}
+.retro-theme .method-intro{background:#efefef}
+.retro-theme .method-directory{background:#e8e8e8}
+.retro-theme .method-phase-card h3,.retro-theme .method-phase-card>p:not(.method-tag){color:#171717}
+.retro-theme .method-phase-steps>a{color:#1b1b1b}
+.retro-theme .method-phase-steps>a:hover{color:#000080;text-decoration:underline}
+.retro-theme .method-card-cta,.retro-theme .method-source{color:#000080}
+.retro-theme .method-bottom{background:#000080;color:#fff}
+.retro-theme .method-bottom h2,.retro-theme .method-bottom span{color:#fff}
+.retro-theme .method-bottom p{color:#e2e2f9}
+.retro-theme .method-crumb,.retro-theme .method-crumb a{color:#000080}
+.retro-theme .phase-side>span,.retro-theme .step-timing>span{color:#000080}
+.retro-theme .phase-side>strong,.retro-theme .step-timing>strong,.retro-theme .phase-side>p{color:#1c1c1c}
+.retro-theme .phase-body,.retro-theme .method-stage-entry{background:#ededed}
+.retro-theme .phase-step-row,.retro-theme .method-home-phase{border-color:#b1b1b1}
+.retro-theme .phase-step-count{color:#777}
+.retro-theme .phase-step-time{color:#000080}
+.retro-theme .phase-step-row p{color:#555}
+.retro-theme .phase-step-open,.retro-theme .phase-buttons .inline-link{color:#000080}
+.retro-theme .phase-exit,.retro-theme .before-reading{border:2px solid;border-color:#fff #808080 #808080 #fff;border-radius:0;background:#ffffe1}
+.retro-theme .phase-exit strong,.retro-theme .phase-exit p{color:#2c2c2c}
+.retro-theme .single-step-layout{background:#f6f6f6}
+.retro-theme .step-intro-banner{background:#ffffe1;border:2px solid;border-color:#fff #808080 #808080 #fff;border-radius:0}
+.retro-theme .step-intro-icon{background:#000080;border-radius:0}
+.retro-theme .step-intro-banner strong,.retro-theme .step-intro-banner p{color:#222}
+.retro-theme .section-heading-mini{border-bottom:2px solid #999}
+.retro-theme .section-heading-mini>span{color:#000080}
+.retro-theme .single-action-list>li{background:#fff;border:2px solid;border-color:#a0a0a0 #fff #fff #a0a0a0;border-radius:0}
+.retro-theme .single-action-list>li>span{color:#000080}
+.retro-theme .single-action-list>li>p{color:#282828}
+.retro-theme .prompt-copybox{background:#fff;color:#000;border:2px solid;border-color:#808080 #fff #fff #808080;border-radius:0}
+.retro-theme .prompt-copy-head{background:linear-gradient(90deg,#000080,#1084d0);border-color:#000050;color:#fff}
+.retro-theme .prompt-copy-head span{color:#fff}
+.retro-theme .method-copy-btn{background:#c0c0c0;border:2px solid;border-color:#fff #404040 #404040 #fff;border-radius:0;color:#000}
+.retro-theme .prompt-copybox pre{color:#151515;background:#fff;font:13px/1.7 "Courier New",monospace}
+.retro-theme .step-output{border:2px solid;border-color:#fff #808080 #808080 #fff;background:#eaeaea;border-radius:0}
+.retro-theme .step-output>strong{color:#000080}
+.retro-theme .step-output li:before{color:#000080}
+.retro-theme .step-avoid{background:#ffffe1;border-left:4px solid #a89144;border-radius:0}
+.retro-theme .step-avoid strong,.retro-theme .step-avoid p{color:#3e3423}
+.retro-theme .method-source{background:#fff;border-radius:0;border:1px solid #999}
+.retro-theme .single-step-end{background:#c0c0c0;border:2px solid;border-color:#fff #808080 #808080 #fff;border-radius:0}
+.retro-theme .single-step-end p{color:#282828}
+.retro-theme .done-step-btn,.retro-theme .step-next{background:#000080;color:#fff;border-radius:0;border:2px solid;border-color:#5656d7 #000041 #000041 #5656d7}
+.retro-theme .done-step-btn[aria-pressed=true]{background:#d0ebcb;color:#000;border-color:#fff #555 #555 #fff}
+.retro-theme .step-prev{color:#000080}
+.retro-theme .sticky-step-nav{border:2px solid;border-color:#fff #808080 #808080 #fff;border-radius:0;background:#c0c0c0}
+.retro-theme .step-nav-head{background:linear-gradient(90deg,#000080,#1084d0);color:#fff}
+.retro-theme .step-nav-head>span,.retro-theme .step-nav-head small{color:#dce8ff}
+.retro-theme .sticky-step-nav nav a{color:#222;border-radius:0}
+.retro-theme .sticky-step-nav nav a.selected{background:#000080;color:#fff}
+.retro-theme .sticky-step-nav nav a.selected .step-nav-num{color:#fff}
+.retro-theme .sticky-step-nav nav a:hover{background:#e2e2e2;color:#000}
+.retro-theme .sticky-step-nav nav a.selected:hover{background:#000080;color:#fff}
+.retro-theme .sticky-step-nav>a{color:#000080}
+.retro-theme .guide-category{background:#efefef}
+.retro-theme .page-top,.retro-theme .article-head{background:#e1e1e1;color:#111}
+.retro-theme .page-top h1,.retro-theme .article-head h1{color:#111}
+.retro-theme .page-top h1 em{color:#000080}
+.retro-theme .page-top p,.retro-theme .article-head-inner>div:first-child>p,.retro-theme .article-meta{color:#383838}
+.retro-theme .search-wrap{background:#fff;border:2px solid;border-color:#808080 #fff #fff #808080;border-radius:0}
+.retro-theme .search-wrap svg{color:#000080}
+.retro-theme .stage-selector button{border-radius:0;background:#c0c0c0;color:#000;border:2px solid;border-color:#fff #555 #555 #fff}
+.retro-theme .stage-selector button[aria-pressed=true]{background:#000080;color:#fff;border-color:#4444a9 #000041 #000041 #4444a9}
+.retro-theme .filter-count{color:#404040!important}
+.retro-theme .article-cover{border-radius:0;background:linear-gradient(120deg,#000080,#1084d0)}
+.retro-theme .article-cover .cover-symbol{color:#fff}
+.retro-theme .breadcrumb,.retro-theme .breadcrumb a{color:#000080}
+.retro-theme .toc-inner{background:#c0c0c0;border-radius:0;border:2px solid;border-color:#fff #808080 #808080 #fff}
+.retro-theme .toc-label,.retro-theme .toc li a span{color:#000080}
+.retro-theme .toc li a{color:#252525}
+.retro-theme .toc button{background:#c0c0c0;border:2px solid;border-color:#fff #404040 #404040 #fff;border-radius:0;color:#000}
+.retro-theme .lesson h2{color:#101010}
+.retro-theme .lesson-why{color:#414141}
+.retro-theme .action-list li{border:2px solid;border-color:#fff #9a9a9a #9a9a9a #fff;border-radius:0}
+.retro-theme .action-list li:before{color:#000080}
+.retro-theme .example,.retro-theme .mistake{background:#ffffe1;border:1px solid #a1a1a1;border-radius:0}
+.retro-theme .example span,.retro-theme .mistake span{color:#000080}
+.retro-theme .example p,.retro-theme .mistake p{color:#2b2b2b}
+.retro-theme .takeaway{background:#000080;border-radius:0;color:#fff}
+.retro-theme .takeaway-icon{background:#c0c0c0;border-radius:0;color:#000}
+.retro-theme .prompt-optional{border-radius:0;background:#fff;border:2px solid;border-color:#fff #999 #999 #fff}
+.retro-theme .prompt-optional summary{color:#000080}
+.retro-theme .copy-prompt{border-radius:0;background:#000080;color:#fff}
+.retro-theme .next-guide{border-radius:0;background:#000080;color:#fff}
+.retro-theme .resource-content,.retro-theme .stage-content{background:#f6f6f6}
+.retro-theme .resource-alert{border-left-color:#000080;background:#ffffe1}
+.retro-theme .resource-card{background:#fff;border:2px solid;border-color:#fff #808080 #808080 #fff;border-radius:0}
+.retro-theme .resource-card>span{color:#000080}
+.retro-theme .about-values>div>span{color:#000080}
+.retro-theme .site-footer{background:#c0c0c0;color:#111;border-top:2px solid #fff}
+.retro-theme .footer-main{border-color:#999}
+.retro-theme .footer-brand p,.retro-theme .footer-links a,.retro-theme .footer-bottom{color:#383838}
+.retro-theme .footer-links strong{color:#000080}
+.retro-theme .footer-brand>.logo-type{color:#111}
+.retro-theme .footer-brand>.logo-type .dot{color:#000}
+.retro-theme .footer-links a:hover{color:#000080}
+.retro-theme .toast{background:#ffffe1;color:#111;border:2px solid #000080;border-radius:0}
+/* Fixed operating-system taskbar and Start menu */
+.retro-taskbar{position:fixed;bottom:0;left:0;right:0;height:41px;z-index:95;display:flex;align-items:center;gap:7px;background:#c0c0c0;border-top:2px solid #fff;padding:3px 6px;box-shadow:0 -1px 0 #808080}
+.retro-taskbar button{font:700 12px Tahoma,Arial,sans-serif}
+.retro-start-button{display:flex;align-items:center;gap:7px;height:32px;min-width:91px;padding:2px 9px;background:#c0c0c0;color:#000;border:2px solid;border-color:#fff #404040 #404040 #fff}
+.retro-start-button.is-open,.retro-start-button:active{border-color:#404040 #fff #fff #404040;background:#b0b0b0}
+.retro-start-mark{font:bold 21px/1 Tahoma,sans-serif;color:#000080}
+.retro-task-window{height:31px;min-width:190px;max-width:330px;display:flex;gap:9px;align-items:center;padding:3px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:#b4b4b4;color:#111;border:2px solid;border-color:#808080 #fff #fff #808080}
+.retro-task-window>span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.retro-task-clock{margin-left:auto;min-width:92px;text-align:center;font:12px Tahoma,Arial,sans-serif;color:#111;padding:7px 10px;border:2px solid;border-color:#808080 #fff #fff #808080;background:#c0c0c0}
+.retro-start-menu{display:flex;position:fixed;z-index:99;left:4px;bottom:40px;width:min(360px,calc(100vw - 12px));background:#c0c0c0;border:3px solid;border-color:#fff #404040 #404040 #fff;box-shadow:3px 3px 0 #001e25aa;min-height:309px}
+.retro-start-menu[hidden]{display:none!important}
+.retro-start-rail{width:34px;flex:none;background:linear-gradient(#808080,#000080);color:#fff;font-size:18px;font-weight:800;letter-spacing:.04em;writing-mode:vertical-rl;transform:rotate(180deg);display:flex;align-items:end;justify-content:flex-start;padding:9px 2px}
+.retro-start-rail span{color:#d0dcff}
+.retro-start-items{flex:1;padding:6px 4px}
+.retro-start-items>a{display:flex;align-items:center;gap:12px;padding:10px 9px;color:#111;font:13px Tahoma,Arial,sans-serif;min-height:45px}
+.retro-start-items>a:hover,.retro-start-items>a:focus-visible{background:#000080;color:#fff}
+.retro-start-items>a>b{margin-left:auto}
+.retro-menu-symbol{width:26px;display:grid;place-items:center;color:#000080;font-size:22px;font-weight:800}
+.retro-start-items>a:hover .retro-menu-symbol{color:#fff}
+.retro-start-separator{border-top:1px solid #808080;border-bottom:1px solid #fff;margin:4px 7px}
+.retro-window-hidden .retro-desktop-shortcuts{display:flex}
+/* Responsive desktop feel without losing article usability */
+@media(max-width:1140px){
+ .retro-window{width:calc(100% - 137px);margin-right:14px}
+ .retro-theme .nav-links{gap:5px}
+ .retro-theme .nav-links a{padding:8px 6px}
+}
+@media(max-width:840px){
+ .retro-desktop-shortcuts{display:none}
+ .retro-window{margin:14px auto 58px;width:calc(100% - 20px)}
+ .retro-theme .method-home-grid{padding:50px 0}
+ .retro-theme .method-home-copy h1{font-size:clamp(42px,7vw,65px)}
+ .retro-theme .nav-links{background:#c0c0c0;top:55px;border:2px solid #808080}
+ .retro-theme .nav-links a{color:#111;border-color:#999}
+ .retro-theme .nav-links a.active{color:#fff}
+}
+@media(max-width:560px){
+ body.retro-theme{padding-bottom:41px}
+ .retro-window{width:calc(100% - 10px);margin:5px auto 47px;padding:2px}
+ .retro-titlebar{min-height:33px}
+ .retro-titlebar-name{font-size:11px}
+ .retro-window-controls button{width:24px;height:23px;font-size:15px}
+ .retro-menu-bar{gap:0;padding:3px}
+ .retro-menu-bar a{font-size:11px;padding:4px 6px}
+ .retro-location-bar{font-size:11px;padding:5px}
+ .retro-location-field{font-size:10px;min-height:25px}
+ .retro-go{padding:3px 8px}
+ .retro-theme .nav-wrap{height:53px}
+ .retro-theme .method-home-grid{padding:48px 0}
+ .retro-theme .method-home-copy h1{font-size:clamp(39px,10.5vw,52px)}
+ .retro-theme .method-home-plan{padding:4px;min-height:390px}
+ .retro-theme .method-home-plan-title{margin:32px 14px 14px}
+ .retro-theme .method-home-proof{gap:9px}
+ .retro-theme .method-start-card{min-height:210px}
+ .retro-task-window{min-width:0;flex:1;max-width:195px}
+ .retro-task-window>span:last-child{font-size:11px}
+ .retro-task-clock{min-width:77px;font-size:11px;padding:7px 5px}
+ .retro-start-button{min-width:81px;padding:3px 6px}
+ .retro-statusbar{font-size:10px}
+ .retro-statusbar span:last-child{display:none}
+ .retro-theme .method-head h1,.retro-theme .single-step-top h1,.retro-theme .phase-head-inner h1{font-size:clamp(33px,9vw,44px)}
+}
+@media(prefers-reduced-motion:reduce){.retro-theme *,.retro-theme *::before,.retro-theme *::after{transition:none!important;scroll-behavior:auto!important}}
