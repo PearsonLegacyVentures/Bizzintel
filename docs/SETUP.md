@@ -1,35 +1,14 @@
-# BizzIntel setup — founder-led curriculum
+# BizzIntel public informational site — build and launch
 
-## 1. Preview without any paid AI
-- Clone \`PearsonLegacyVentures/Bizzintel\`.
-- Use Node.js 22+; run \`npm run check\`, \`npm test\`, and \`npm run build\`.
-- Cloudflare Pages: no framework preset; build command \`npm run build\`; output \`dist\`.
-- Build is intentionally \`noindex\` until real launch preparation and editorial review.
-- With no credentials the application runs in a **session-only demo mode** (not persisted).
+1. Run \`npm run check\` then \`npm test\` with Node.js 22+. Run \`npm run build\`; this generates all public routes into \`dist/\`.
+2. For local preview run \`npm run dev\` and open http://127.0.0.1:4173.
+3. Cloudflare Pages should use **no framework**, build \`npm run build\`, output \`dist\`. Keep current GitHub/Cloudflare workflow; no migration required.
+4. Test homepage, /start-here/, /guides/, all 10 /guides/{id}/ pages, /resources/, /about/, mobile menu, search, filtering, anchors, checklist copy and print.
+5. Before making the site discoverable, review curriculum and confirm the real production URL. Set \`PUBLIC_INDEXING=true\` and \`SITE_URL=https://<actual-authorized-domain>\` in Cloudflare Pages build settings. Build again, then confirm robots.txt and sitemap.xml on the deployed domain.
+6. Submit the sitemap through a verified Search Console property if indexing is wanted. Don't claim indexing has happened simply because a sitemap exists.
 
-## 2. Optional cloud accounts and workbook saving
-- Create a *dedicated* BizzIntel Supabase project under the intended organization after confirming pricing. Never reuse Tranquilitas Dispatch or unrelated customer databases.
-- Run \`supabase/migrations/20261018160000_initial_bizzintel.sql\`.
-- Confirm RLS and test isolation using two distinct accounts and businesses.
-- Configure email verification, Auth site/redirect URLs and password reset for the final Cloudflare domain.
-- Locally, copy \`config.example.js\` to \`config.js\` and insert the project URL plus **public publishable key** only.
-- For Cloudflare builds use \`BIZZINTEL_SUPABASE_URL\` and \`BIZZINTEL_SUPABASE_PUBLISHABLE_KEY\` environment values.
-- Never include an OpenAI key, service-role key or other private credential in the browser.
+Security/privacy: Public website collects no visitor data in this version; no auth, Supabase, OpenAI or server secrets are needed. Default headers include CSP, frame restrictions and no camera/microphone permissions.
 
-## 3. Review and maintain the course
-- Curriculum source is \`src/playbooks.js\`. Editorial policy: \`docs/PLAYBOOK_EDITORIAL.md\`.
-- No AI advisor, model backend or paid AI API is involved in delivering lessons.
-- Optional prompts are copied by the learner into their own tool if desired.
-- Confirm references and local legal / compliance guidance before public publishing.
+**Not implemented:** background grant discovery, auto-email reports, live business account setup, content publishing and private user workbooks. These are not needed for the informational site.
 
-## 4. Before public launch
-- Verify mobile and desktop routes, forms, clipboard copy, exports, workbook-saving and deletion flows.
-- Test Supabase sign-up/sign-in/reset and cross-account data isolation.
-- Verify public Pages deployment and URL paths; review access policies and Auth redirect allowlists.
-- Test course wording with actual entrepreneurs and validate the founder's final methods.
-
-## Known limits
-- No live backend or deployed domain has been verified yet.
-- Reports and grant opportunities are guided workflows, **not** scheduled background jobs.
-- Social media accounts and Google Business Profiles are not created automatically.
-- Learners are owner-only; team permissions require a later version.
+If future tools are added, build them separately without turning the guide homepage into a login wall.
