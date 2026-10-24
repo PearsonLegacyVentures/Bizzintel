@@ -1,4 +1,4 @@
-name: BizzIntel checks
+name: BizzIntel public site checks
 on:
   push:
     branches: [main]
@@ -13,16 +13,22 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Static checks
+      - name: Syntax checks
         run: npm run check
-      - name: Unit tests
-        run: npm test
-      - name: Static Cloudflare build
+      - name: Build public site
         run: npm run build
-      - name: Verify build assets
+      - name: Run tests
+        run: npm test
+      - name: Verify Cloudflare publishing output
         run: |
-          test -f dist/index.html
-          test -f dist/src/app.js
-          test -f dist/styles.css
-          test -f dist/config.js
-          test -f dist/_headers
+          test -s dist/index.html
+          test -s dist/styles.css
+          test -s dist/site.js
+          test -s dist/_headers
+          test -s dist/robots.txt
+          test -s dist/guides/index.html
+          test -s dist/start-here/index.html
+          test -s dist/resources/index.html
+          test -s dist/about/index.html
+          test -s dist/guides/ideation/index.html
+          test -s dist/guides/planning/index.html
