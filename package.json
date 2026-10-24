@@ -7,6 +7,7 @@
     "build": "node scripts/build.mjs",
     "dev": "npm run build && node scripts/dev.mjs",
     "check": "node --check scripts/public-build.mjs && node --check site.js && node --check src/playbooks.js && node --check scripts/dev.mjs",
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "prepare": "npm run build"
   }
 }
