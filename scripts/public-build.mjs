@@ -120,6 +120,9 @@ function home(){
   ["04","The deliverable","What to finish before moving forward."]
   ].map(x=>'<div><span>'+x[0]+'</span><div><strong>'+x[1]+'</strong><p>'+x[2]+'</p></div></div>').join("")+'</div></div></section>';
  const finish='<section class="section"><div class="wrap">'+featured()+'</div></section>'+
+  '<section class="founder-band"><div class="wrap founder-band-inner"><div>'+label("FROM THE PEOPLE BUILDING BUSINESSES")+
+  '<h2>Useful guidance, shaped by real work.</h2><p>BizzIntel is created by Bahamas AI Solutions, founded by Amar Pearson. Our business-building perspective comes from working on websites, service operations and practical systems—not an AI-generated playbook.</p></div>'+
+  '<a href="https://bahamasaisolutions.com/work/" target="_blank" rel="noopener noreferrer" class="inline-link">View our Track Record '+icons.arrowup+'</a></div></section>'+
   '<section class="final-cta"><div class="wrap final-inner">'+label("START WITH SOMETHING USEFUL")+
   '<h2>You do not have to figure<br>everything out at once.</h2>'+
   '<p>Start with the next practical lesson, finish the exercise, and move forward with more clarity.</p>'+btn("/start-here/","Find your first guide")+'</div></section>';
